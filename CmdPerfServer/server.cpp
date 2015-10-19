@@ -21,7 +21,19 @@ namespace nemesis { namespace perf { namespace detail
 		}
 		bool Listen( int port )
 		{
-			return listen( Instance, SOMAXCONN ) >= 0;
+			Close();
+			Instance = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
+			if (!IsOpen())
+				return false;
+			sockaddr_in addr;
+			addr.sin_family		 = AF_INET;
+			addr.sin_addr.s_addr = htonl( 0 );
+			addr.sin_port		 = htons( port );
+			if (bind( Instance, (sockaddr*)&addr, sizeof(addr) ) < 0)
+				return false;
+			if (listen( Instance, SOMAXCONN ) < 0)
+				return false;
+			return true;
 		}
 		bool IsOpen() const
 		{
@@ -60,7 +72,7 @@ namespace nemesis { namespace perf { namespace detail
 		void Create( uint32_t initial, uint32_t limit )	{ Close(); Handle = CreateSemaphoreA( nullptr, initial, limit, nullptr ); }
 		void Close()									{ CloseHandle( Handle ); }
 		void Signal( uint32_t count = 1 )				{ ReleaseSemaphore( Handle, count, nullptr ); }
-		void Wait()										{ WaitForSingleObject( Handle, 0xffffffff ); }
+		void Wait()										{ WaitForSingleObject( Handle, INFINITE ); }
 	private:
 		HANDLE Handle;
 	};
@@ -79,13 +91,33 @@ namespace nemesis { namespace perf { namespace detail
 	class Thread
 	{
 	public:
-		Thread();
-		~Thread();
+		Thread()
+			: Handle(nullptr)
+			, Quit(0)
+		{}
+
+		~Thread()
+		{ Stop(); }
+
 	public:
-		bool Continue() const;
-		void Start( void (*proc)( void* arg ), void* arg );
-		void Stop();
+		bool Continue() const 
+		{ return !Quit; }
+
+		void Start( void (*proc)( void* arg ), void* arg )
+		{
+			if (Handle)
+				return;
+		}
+		void Stop() 
+		{
+			Quit = 1;
+			WaitForSingleObject( Handle, INFINITE );
+			Handle = nullptr;
+		}
+
 	private:
+		HANDLE Handle;
+		uint32_t Quit;
 	};
 
 	struct Buffer
