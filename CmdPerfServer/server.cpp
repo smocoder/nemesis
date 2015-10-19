@@ -103,10 +103,13 @@ namespace nemesis { namespace perf { namespace detail
 		bool Continue() const 
 		{ return !Quit; }
 
-		void Start( void (*proc)( void* arg ), void* arg )
+		void Start( DWORD (__stdcall *proc)( void* arg ), void* arg )
 		{
 			if (Handle)
 				return;
+			Quit = 0;
+			DWORD thread_id;
+			Handle = CreateThread( nullptr, 0, proc, arg, 0, &thread_id );
 		}
 		void Stop() 
 		{
@@ -219,8 +222,11 @@ namespace nemesis { namespace perf { namespace detail
 			Queue.Push( data );
 		}
 	private:
-		static void Run( void* arg )
-		{ ((Sender*)arg)->Accept(); }
+		static DWORD __stdcall Run( void* arg )
+		{ 
+			((Sender*)arg)->Accept(); 
+			return 0;
+		}
 
 		void Accept()
 		{
@@ -279,7 +285,7 @@ namespace nemesis { namespace perf { namespace detail
 
 namespace nemesis
 {
-	perf::detail::Server PerfServer;
+	static perf::detail::Server PerfServer;
 
 	void perf::Server_Initialize()
 	{ PerfServer.Initialize(); }
