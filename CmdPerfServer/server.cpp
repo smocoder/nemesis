@@ -8,14 +8,48 @@ namespace nemesis { namespace perf { namespace detail
 	class Socket
 	{
 	public:
-		Socket();
+		Socket() 
+			: Instance(INVALID_SOCKET)
+		{}
+
 	public:
-		Socket Accept();
-		bool Listen( int port );
-		bool IsOpen() const;
-		void Close();
-		bool Send( const void* data, uint32_t size );
+		Socket Accept()
+		{
+			Socket remote;
+			remote.Instance = accept( Instance, nullptr, nullptr );
+			return remote;
+		}
+		bool Listen( int port )
+		{
+			return listen( Instance, SOMAXCONN ) >= 0;
+		}
+		bool IsOpen() const
+		{
+			return (Instance != INVALID_SOCKET);
+		}
+		void Close()
+		{
+			closesocket(Instance);
+			Instance = INVALID_SOCKET;
+		}
+		bool Send( const void* data, uint32_t size )
+		{
+			if (!IsOpen())
+				return false;
+			const char* pos = (const char*)data;
+			const char* end = pos + size;
+			while ( pos < end )
+			{
+				int written = send( Instance, pos, (int)(end-pos), 0 );
+				if (written > 0)
+					pos += written;
+				else
+					return false;
+			}
+			return true;
+		}
 	private:
+		SOCKET Instance;
 	};
 
 	class Semaphore
