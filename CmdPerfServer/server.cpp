@@ -8,6 +8,73 @@
 
 #define NeMakeFourCc( a, b, c, d ) ( ((a) << 24) | ((b) << 16) | ((c) << 8) | (d) )
 
+namespace nemesis
+{
+	struct IntrinsicComparer
+	{
+		template < typename T >
+		static int Compare( const T& lhs, const T& rhs )
+		{
+			if (lhs > rhs)
+				return 1;
+			if (lhs < rhs)
+				return -1;
+			return 0;
+		}
+
+		template < typename T >
+		static bool Equals( const T& lhs, const T& rhs )
+		{ return lhs == rhs; }
+	};
+
+	struct BitwiseComparer
+	{
+		template < typename T >
+		static int Compare( const T& lhs, const T& rhs )
+		{ return memcmp( &lhs, &rhs, sizeof(T) ); }
+
+		template < typename T >
+		static bool Equals( const T& lhs, const T& rhs )
+		{ return 0 == Compare( lhs, rhs ); }
+	};
+
+	struct BinaryFindResult
+	{
+		uint32_t Index;
+		bool	 Found;
+
+		BinaryFindResult( uint32_t index, bool found )
+			: Index(index)
+			, Found(found)
+		{}
+	};
+
+	template < typename C, typename T, typename K >
+	BinaryFindResult BinaryFind( const T& a, const K& v )
+	{
+		int cmp;
+		int32_t pivot;
+		int32_t start = 0;
+		int32_t end = ((int32_t)a.size())-1;
+		for ( ; start <= end; )
+		{
+			pivot = (start+end)/2;
+			cmp = C::Compare(a[pivot], v);
+			if ( 0 == cmp )
+				return BinaryFindResult( pivot, true );
+			if ( cmp > 0 )
+				end = pivot-1;
+			else
+				start = pivot+1;
+		}
+		return BinaryFindResult( start, false );
+	}
+
+	template < typename T, typename K >
+	BinaryFindResult BinaryFind( const T& a, const K& v )
+	{ return BinaryFind<IntrinsicComparer>( a, v ); }
+}
+
 namespace nemesis { namespace perf { namespace detail 
 {
 	namespace ping
@@ -83,6 +150,39 @@ namespace nemesis { namespace perf { namespace detail
 			uint8_t _pad0_[2];
 			uint32_t _reserved0_;
 			int64_t Tick;
+		};
+
+		struct NameList
+		{
+			static const uint32_t ID = 0x0102;
+			#pragma pack(push)
+			#pragma pack(1)
+			struct Item
+			{
+				uint64_t Name;
+				uint16_t Length;
+			};
+			#pragma pack(pop)
+			Header Header;
+			uint32_t Count;
+			uint32_t _pad0_;
+		};
+
+		struct LocationList
+		{
+			static const uint32_t ID = 0x0103;
+			struct Item
+			{
+				uint64_t Name;
+				uint64_t Func;
+				uint64_t File;
+				uint32_t Line;
+				uint32_t Id;
+			};
+			Header Header;
+			uint32_t Count;
+			uint8_t ThreadId;
+			uint8_t _pad0_[3];
 		};
 
 		struct Packet
@@ -281,7 +381,7 @@ namespace nemesis { namespace perf { namespace detail
 
 	struct Buffer
 	{
-		enum { NUM_BYTES = 8 * 64 * 1024 };
+		enum { NUM_BYTES = 64 * 1024 };
 		uint32_t Size;
 		uint8_t Data[ NUM_BYTES ];
 	};
@@ -353,14 +453,20 @@ namespace nemesis { namespace perf { namespace detail
 	class Sender
 	{
 	public:
-		Sender()	
+		Sender()
+			: ClientId(0)
 		{}
 
 		~Sender()
 		{ 
-			Stop(); 
+			Stop();
 		}
 	public:
+		uint32_t GetClientId() const
+		{
+			return ClientId;
+		}
+
 		bool Start( int port )
 		{
 			if (Server.IsOpen())
@@ -397,6 +503,7 @@ namespace nemesis { namespace perf { namespace detail
 				if (!Client.IsOpen())
 					continue;
 				{
+					++ClientId;
 					Queue.Open();
 					Publish();
 					Client.Close();
@@ -430,6 +537,64 @@ namespace nemesis { namespace perf { namespace detail
 		Socket Server;
 		Socket Client;
 		Thread Worker;
+		std::atomic<uint32_t> ClientId;
+	};
+
+	struct Location
+	{
+		const char* Name;
+		const char* Func;
+		const char* File;
+		uint32_t Line;
+	};
+
+	class NameMap
+	{
+	public:
+		void Register( const char* name )
+		{
+			const BinaryFindResult find = BinaryFind( Set, name );
+			if (find.Found)
+				return;
+			Set.insert( Set.begin() + find.Index, name );
+			Name.push_back( name );
+			Length.push_back( (uint16_t)(1+strlen(name)) );
+		}
+
+	public:
+		std::vector<const char*> Set;
+		std::vector<const char*> Name;
+		std::vector<uint16_t> Length;
+	};
+
+	class LocationMap
+	{
+	public:
+		struct Pair
+		{
+			Location Scope;
+			uint32_t Index;
+		};
+		struct PairComparer
+		{
+			static int Compare( const Pair& lhs, const Location& rhs )
+			{ return BitwiseComparer::Compare(lhs.Scope, rhs); }
+		};
+
+		uint32_t Register( const Location& scope )
+		{
+			const BinaryFindResult find = BinaryFind<PairComparer>( Set, scope );
+			if (find.Found)
+				return Set[find.Index].Index;
+			const Pair pair = { scope, Scope.size() };
+			Set.insert( Set.begin() + find.Index, pair );
+			Scope.push_back( scope );
+			return pair.Index;
+		}
+
+	public:
+		std::vector<Pair> Set;
+		std::vector<Location> Scope;
 	};
 
 	class TlsRecorder
@@ -438,31 +603,41 @@ namespace nemesis { namespace perf { namespace detail
 		TlsRecorder( int index, Sender* sender )
 			: Index( index )
 			, Sender( sender )
+			, FirstName( 0 )
+			, FirstScope( 0 )
+			, ClientId( 0 )
 		{
 			ZeroMemory(&Data, sizeof(Data));
-			Data.Size = sizeof(packet::Packet); // reserve space for packet header
+			ZeroMemory(&Meta, sizeof(Meta));
+			Data.Size = sizeof(packet::Packet);
+			Meta.Size = sizeof(packet::Packet);
 		}
 
 	public:
 		void EnterScope( const char* tag, const char* func, const char* file, int line )
 		{
-			uint32_t scope_id = 0;
-
+			Mutex.Enter();
+			const Location scope = 
+			{ tag
+			, func
+			, file
+			, line 
+			};
 			const packet::EnterScope item = 
 			{ { packet::EnterScope::ID, sizeof(item) }
 			, Index
 			, (uint8_t)GetCurrentProcessorNumber()
 			, { 0, 0 }
-			, scope_id
+			, Register( scope )
 			, Clock::GetTick()
 			};
-			Record( &item.Header );
+			RecordNoLock( &item.Header );
+			Mutex.Leave();
 		}
 
 		void LeaveScope()
 		{
-			uint32_t scope_id = 0;
-
+			Mutex.Enter();
 			const packet::LeaveScope item = 
 			{ { packet::LeaveScope::ID, sizeof(item) }
 			, Index
@@ -471,7 +646,8 @@ namespace nemesis { namespace perf { namespace detail
 			, 0
 			, Clock::GetTick()
 			};
-			Record( &item.Header );
+			RecordNoLock( &item.Header );
+			Mutex.Leave();
 		}
 
 		void NextFrame()
@@ -484,33 +660,126 @@ namespace nemesis { namespace perf { namespace detail
 		void Record( const packet::Header* data )
 		{
 			Mutex.Enter();
-			if (Data.Size + data->Size > Data.NUM_BYTES)
-				Flush();
-			memcpy( Data.Data + Data.Size, data, data->Size );
-			Data.Size += data->Size;
+			RecordNoLock( data );
 			Mutex.Leave();
 		}
 
 	private:
 		void Flush()
 		{
-			if (Data.Size <= sizeof(packet::Packet))
+			WriteMeta();
+			Flush( Meta );
+			Flush( Data );
+		}
+		void WriteMeta()
+		{
+			const uint32_t client_id = Sender->GetClientId();
+			if (client_id != ClientId)
+			{
+				FirstName = 0;
+				FirstScope = 0;
+				ClientId = client_id;
+				Meta.Size = sizeof(packet::Packet);
+			}
+			WriteNames();
+			WriteScopes();
+		}
+		void WriteNames()
+		{
+			const uint32_t num_names = Name.Name.size() - FirstName;
+			for ( uint32_t i = 0; i < num_names; ++i )
+			{
+				const uint32_t size = sizeof( packet::NameList ) + sizeof( packet::NameList::Item ) + Name.Length[i];
+				if ( Meta.Size + size > Buffer::NUM_BYTES )
+					Flush( Meta );
+
+				const packet::NameList::Item item = 
+				{ (uint64_t)Name.Name[i]
+				, (uint16_t)Name.Length[i]
+				};
+				const packet::NameList list = 
+				{ { packet::NameList::ID, size } 
+				, 1
+				, 0
+				};
+				memcpy( Meta.Data + Meta.Size, &list, sizeof(list) );			Meta.Size += sizeof(list);
+				memcpy( Meta.Data + Meta.Size, &item, sizeof(item) );			Meta.Size += sizeof(item);
+				memcpy( Meta.Data + Meta.Size, Name.Name[i], Name.Length[i] );	Meta.Size += Name.Length[i];
+			}
+			FirstName = Name.Name.size();
+		}
+		void WriteScopes()
+		{
+			const uint32_t num_scopes = Scope.Scope.size() - FirstScope;
+			for ( uint32_t i = 0; i < num_scopes; ++i )
+			{
+				const uint32_t size = sizeof( packet::LocationList ) + sizeof( packet::LocationList::Item );
+				if ( Meta.Size + size > Buffer::NUM_BYTES )
+					Flush( Meta );
+
+				const Location& scope = Scope.Scope[i];
+				const packet::LocationList::Item item = 
+				{ (uint64_t)scope.Name
+				, (uint64_t)scope.Func
+				, (uint64_t)scope.File
+				, (uint32_t)scope.Line
+				, i
+				};
+				const packet::LocationList list = 
+				{ { packet::LocationList::ID, size } 
+				, 1
+				, Index
+				, 0
+				};
+				memcpy( Meta.Data + Meta.Size, &list, sizeof(list) ); Meta.Size += sizeof(list);
+				memcpy( Meta.Data + Meta.Size, &item, sizeof(item) ); Meta.Size += sizeof(item);
+			}
+			FirstScope = Scope.Scope.size();
+		}
+		void Flush( Buffer& data )
+		{
+			if (data.Size <= sizeof(packet::Packet))
 				return;
 			{
 				const packet::Packet item = 
-				{ { packet::Packet::ID, Data.Size }
+				{ { packet::Packet::ID, data.Size }
 				, 0, 0
 				};
-				memcpy( Data.Data, &item, sizeof(item) );
+				memcpy( data.Data, &item, sizeof(item) );
 			}
-			Sender->Send( Data );
-			Data.Size = sizeof(packet::Packet);
+			Sender->Send( data );
+			data.Size = sizeof(packet::Packet);
+		}
+		void RecordNoLock( const packet::Header* header )
+		{
+			RecordNoLock( Data, header, header->Size );
+		}
+		void RecordNoLock( Buffer& data, const void* p, uint32_t s )
+		{
+			if ((data.Size + s) > Buffer::NUM_BYTES)
+				Flush( data );
+			memcpy( data.Data + data.Size, p, s );
+			data.Size += s;
+		}
+
+		uint32_t Register( const Location& scope )
+		{
+			Name.Register( scope.Name );
+			Name.Register( scope.Func );
+			Name.Register( scope.File );
+			return Scope.Register( scope );
 		}
 
 	private:
-		Buffer Data;
 		uint8_t Index;
 		Sender* Sender;
+		Buffer Data;
+		Buffer Meta;
+		NameMap Name;
+		LocationMap Scope;
+		uint32_t FirstName;
+		uint32_t FirstScope;
+		uint32_t ClientId;
 		CriticalSection Mutex;
 	};
 
@@ -539,10 +808,14 @@ namespace nemesis { namespace perf { namespace detail
 
 		void NextFrame()
 		{
-			Mutex.Enter();
-			for ( int i = 0; i < TlsList.size(); ++i )
-				TlsList[i]->NextFrame();
-			Mutex.Leave();
+			{
+				Mutex.Enter();
+				{
+					for ( uint32_t i = 0; i < Item.size(); ++i )
+						Item[i]->NextFrame();
+				}
+				Mutex.Leave();
+			}
 			{
 				const packet::Frame item = 
 				{ { packet::Frame::ID, sizeof(item) }
@@ -564,8 +837,8 @@ namespace nemesis { namespace perf { namespace detail
 			{
 				{
 					Mutex.Enter();
-					tls_recorder = new TlsRecorder( TlsList.size(), Sender );
-					TlsList.push_back(tls_recorder);
+					tls_recorder = new TlsRecorder( Item.size(), Sender );
+					Item.push_back(tls_recorder);
 					Mutex.Leave();
 				}
 				TlsSetValue( Tls, tls_recorder );
@@ -579,7 +852,7 @@ namespace nemesis { namespace perf { namespace detail
 		int64_t BeginTick;
 		uint32_t FrameNumber;
 		CriticalSection Mutex;
-		std::vector<TlsRecorder*> TlsList;
+		std::vector<TlsRecorder*> Item;
 	};
 
 	class Server
