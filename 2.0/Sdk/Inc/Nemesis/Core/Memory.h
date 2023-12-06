@@ -12,8 +12,8 @@ namespace Nemesis
 
 	struct Alloc_s
 	{
-		ptr_t  (NE_CALLBK *Realloc)( Alloc_t alloc, ptr_t ptr, size_t size );
-		size_t (NE_CALLBK *SizeOf) ( Alloc_t alloc, ptr_t ptr );
+		ptr_t	(NE_CALLBK *Realloc)( Alloc_t alloc, ptr_t ptr, size_t size );
+		size_t	(NE_CALLBK *SizeOf) ( Alloc_t alloc, ptr_t ptr );
 	};
 }
 
@@ -58,4 +58,26 @@ namespace Nemesis
 	template < typename T >inline T* Mem_Alloc ( Alloc_t alloc, int num )	{ return (T*) Mem_Alloc ( alloc, num * sizeof(T) ); }
 	template < typename T >inline T* Mem_Calloc( Alloc_t alloc )			{ return (T*) Mem_Calloc( alloc,	   sizeof(T) ); }
 	template < typename T >inline T* Mem_Calloc( Alloc_t alloc, int num )	{ return (T*) Mem_Calloc( alloc, num * sizeof(T) ); }
+}
+
+//======================================================================================
+//	Counted Allocator
+//======================================================================================
+namespace Nemesis
+{
+	typedef struct CountedAlloc_s *CountedAlloc_t;
+
+	struct CountedAlloc_s
+	{
+		Alloc_s Alloc;
+		Alloc_t Parent;
+		cstr_t Name;
+		size_t TotalCalls;
+		size_t TotalBytes;
+		size_t PeakBytes;
+	};
+
+	CountedAlloc_s	NE_API CountedAlloc_Create( Alloc_t parent, cstr_t name );
+	void			NE_API CountedAlloc_Dump( CountedAlloc_t alloc );
+
 }

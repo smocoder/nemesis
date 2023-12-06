@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include <Nemesis/Core/Memory.h>
 #include <Nemesis/Core/Assert.h>
+#include <Nemesis/Core/Debug.h>
 #include <memory.h>
 #include <malloc.h>
 
@@ -63,12 +64,16 @@ namespace Nemesis
 
 	static size_t CrtAlloc_SizeOf( Alloc_t alloc, ptr_t ptr )
 	{
+		if (!ptr)
+			return 0;
+
 	#if NE_PLATFORM_IS_WINDOWS
 		return _msize( ptr );
 	#else
 		return malloc_usable_size( ptr );
 	#endif
 	}
+
 }
 
 //======================================================================================
@@ -151,3 +156,42 @@ namespace Nemesis
 
 }
 
+//======================================================================================
+//																	   Counted Allocator
+//======================================================================================
+namespace Nemesis
+{
+	static ptr_t NE_CALLBK CountedAlloc_Realloc( Alloc_t alloc, ptr_t ptr, size_t size )
+	{
+		CountedAlloc_t instance = (CountedAlloc_t)alloc;
+		const size_t old_size = Mem_SizeOf	( instance->Parent, ptr );
+		const ptr_t  new_ptr  = Mem_Realloc	( instance->Parent, ptr, size );
+		const size_t new_size = Mem_SizeOf	( instance->Parent, new_ptr );
+		instance->TotalBytes -= old_size;
+		instance->TotalBytes += new_size;
+		instance->PeakBytes  = NeMax( instance->PeakBytes, instance->TotalBytes );
+		instance->TotalCalls ++;
+		return new_ptr;
+	}
+
+	static size_t NE_CALLBK CountedAlloc_SizeOf( Alloc_t alloc, ptr_t ptr )
+	{
+		CountedAlloc_t instance = (CountedAlloc_t)alloc;
+		return Mem_SizeOf( instance->Parent, ptr );
+	}
+
+	CountedAlloc_s CountedAlloc_Create( Alloc_t parent, cstr_t name )
+	{
+		return CountedAlloc_s { Alloc_s { CountedAlloc_Realloc, CountedAlloc_SizeOf }, parent, name };
+	}
+
+	void CountedAlloc_Dump( CountedAlloc_t alloc )
+	{
+		Debug_Print( "*************************\n" );
+		Debug_PrintF( "*** Allocator: '%s'\n", alloc->Name );
+		Debug_PrintF( "*** Num Calls:  %u\n", alloc->TotalCalls );
+		Debug_PrintF( "*** Peak Bytes: %u\n", alloc->PeakBytes  );
+		Debug_PrintF( "*** Leak Bytes: %u\n", alloc->TotalBytes );
+	}
+
+}
