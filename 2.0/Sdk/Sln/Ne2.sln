@@ -5,6 +5,11 @@ VisualStudioVersion = 17.8.34330.188
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libNeCore", "..\Src\Nemesis\Core\libNeCore.vcxproj", "{B241E1DD-F366-472C-95E0-0B12F9C89E22}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cmdCoreTest", "..\Src\App\cmdCoreTest\cmdCoreTest.vcxproj", "{4EB1A560-2446-4616-8745-B591FB9C1CB4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B241E1DD-F366-472C-95E0-0B12F9C89E22} = {B241E1DD-F366-472C-95E0-0B12F9C89E22}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -18,6 +23,12 @@ Global
 		{B241E1DD-F366-472C-95E0-0B12F9C89E22}.Master|x64.Build.0 = Debug|x64
 		{B241E1DD-F366-472C-95E0-0B12F9C89E22}.Release|x64.ActiveCfg = Release|x64
 		{B241E1DD-F366-472C-95E0-0B12F9C89E22}.Release|x64.Build.0 = Release|x64
+		{4EB1A560-2446-4616-8745-B591FB9C1CB4}.Debug|x64.ActiveCfg = Debug|x64
+		{4EB1A560-2446-4616-8745-B591FB9C1CB4}.Debug|x64.Build.0 = Debug|x64
+		{4EB1A560-2446-4616-8745-B591FB9C1CB4}.Master|x64.ActiveCfg = Debug|x64
+		{4EB1A560-2446-4616-8745-B591FB9C1CB4}.Master|x64.Build.0 = Debug|x64
+		{4EB1A560-2446-4616-8745-B591FB9C1CB4}.Release|x64.ActiveCfg = Release|x64
+		{4EB1A560-2446-4616-8745-B591FB9C1CB4}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

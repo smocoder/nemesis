@@ -7,7 +7,7 @@
 #include <stdarg.h>
 
 //======================================================================================
-//                                      templates
+//	Global Templates
 //======================================================================================
 template < typename T >
 inline T NeMin( const T& a, const T& b )
@@ -30,7 +30,7 @@ inline void NeSwap( T& a, T& b )
 }
 
 //======================================================================================
-//                                      macros
+//	Global Macros
 //======================================================================================
 #define NeUnused(x)			((void)(x))
 #define NeCountOf(a)		(sizeof(a)/sizeof(a[0]))
@@ -41,16 +41,6 @@ inline void NeSwap( T& a, T& b )
 
 #define NeMakeFourCc( a, b, c, d )  ( ((d) << 24) | ((c) << 16) | ((b) << 8) | (a) )
 
-#define NE_NO_COPY(...)\
-	private:\
-		__VA_ARGS__( const __VA_ARGS__& );\
-		__VA_ARGS__& operator = ( const __VA_ARGS__& )
-
-#define NE_DECL_INTERFACE(x)\
-	protected:\
-		virtual ~x() {}\
-	public:
-
 //======================================================================================
 #if (NE_COMPILER == NE_COMPILER_MSVC)
 #	define NeWeak __declspec(selectany) 
@@ -59,7 +49,7 @@ inline void NeSwap( T& a, T& b )
 #endif
 
 //======================================================================================
-//                                      types
+//  Fundamental Types
 //======================================================================================
 namespace Nemesis
 {
@@ -76,7 +66,7 @@ namespace Nemesis
 }
 
 //======================================================================================
-//                                      results
+//	Result Values
 //======================================================================================
 #define NE_OK					0
 #define NE_ERROR				0x8000000
@@ -90,5 +80,7 @@ namespace Nemesis
 #define NeFailed( hr )		((hr & NE_ERROR) == NE_ERROR)
 #define NeSucceeded( hr )	((hr & NE_ERROR) == 0)
 
+//======================================================================================
+//	Abbreviations
 //======================================================================================
 namespace Ne = Nemesis;
