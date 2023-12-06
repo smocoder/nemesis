@@ -96,17 +96,25 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\Assert.h" />
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\Debug.h" />
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\String.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Target.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Types.h" />
+    <ClInclude Include="Debug_Null.h" />
+    <ClInclude Include="Debug_Windows.h" />
     <ClInclude Include="Platform.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Assert.cpp" />
+    <ClCompile Include="Debug.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Master|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="String.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
