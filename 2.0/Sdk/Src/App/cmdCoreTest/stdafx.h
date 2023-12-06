@@ -18,4 +18,5 @@
 #include <Nemesis/Core/Types.h>
 #include <Nemesis/Core/Assert.h>
 #include <Nemesis/Core/Debug.h>
+#include <Nemesis/Core/Memory.h>
 NE_LINK("libNeCore.lib")
