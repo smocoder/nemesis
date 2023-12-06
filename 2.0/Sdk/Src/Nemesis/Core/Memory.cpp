@@ -47,7 +47,7 @@ namespace Nemesis
 //======================================================================================
 namespace Nemesis
 {
-	static ptr_t CrtAlloc_Realloc( ptr_t context, ptr_t ptr, size_t size )
+	static ptr_t CrtAlloc_Realloc( Alloc_t alloc, ptr_t ptr, size_t size )
 	{
 		if (ptr == nullptr)
 			return malloc( size );
@@ -61,7 +61,7 @@ namespace Nemesis
 		return realloc( ptr, size );
 	}
 
-	static size_t CrtAlloc_SizeOf( ptr_t context, ptr_t ptr )
+	static size_t CrtAlloc_SizeOf( Alloc_t alloc, ptr_t ptr )
 	{
 	#if NE_PLATFORM_IS_WINDOWS
 		return _msize( ptr );
@@ -76,7 +76,7 @@ namespace Nemesis
 {
 	namespace 
 	{
-		static Alloc_s CrtAlloc = { CrtAlloc_Realloc, CrtAlloc_SizeOf, nullptr };
+		static Alloc_s CrtAlloc = { CrtAlloc_Realloc, CrtAlloc_SizeOf };
 		static Alloc_t AllocHook = nullptr;
 	}
 
@@ -114,7 +114,7 @@ namespace Nemesis
 	ptr_t Mem_Alloc( Alloc_t alloc, size_t size )
 	{
 		const Alloc_t inst = Alloc_Select( alloc );
-		return inst->Realloc( inst->Context, nullptr, size );
+		return inst->Realloc( inst, nullptr, size );
 	}
 
 	ptr_t Mem_Calloc( Alloc_t alloc, size_t size )
@@ -125,19 +125,19 @@ namespace Nemesis
 	ptr_t Mem_Realloc( Alloc_t alloc, ptr_t ptr, size_t size )
 	{
 		const Alloc_t inst = Alloc_Select( alloc );
-		return alloc->Realloc( alloc->Context, ptr, size );
+		return alloc->Realloc( alloc, ptr, size );
 	}
 
 	void Mem_Free( Alloc_t alloc, ptr_t ptr )
 	{
 		const Alloc_t inst = Alloc_Select( alloc );
-		inst->Realloc( inst->Context, ptr, 0 );
+		inst->Realloc( inst, ptr, 0 );
 	}
 
 	size_t Mem_SizeOf( Alloc_t alloc, ptr_t ptr )
 	{
 		const Alloc_t inst = Alloc_Select( alloc );
-		return inst->SizeOf( inst->Context, ptr );
+		return inst->SizeOf( inst, ptr );
 	}
 
 	ptr_t Mem_Clone( Alloc_t alloc, cptr_t ptr, size_t size )

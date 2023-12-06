@@ -5,19 +5,19 @@
 using namespace Nemesis;
 
 //======================================================================================
-static ptr_t MyAlloc_Realloc( ptr_t context, ptr_t ptr, size_t size )
+static ptr_t MyAlloc_Realloc( Alloc_t alloc, ptr_t ptr, size_t size )
 {
 	ptr_t new_ptr = realloc( ptr, size );
 	Debug_PrintLnF("%s(%d): Realloc: 0x%p, %u -> 0x%p", __FILE__, __LINE__, ptr, size, new_ptr);
 	return new_ptr;
 }
 
-static size_t MyAlloc_SizeOf( ptr_t context, ptr_t ptr )
+static size_t MyAlloc_SizeOf( Alloc_t alloc, ptr_t ptr )
 {
 	return _msize( ptr );
 }
 
-static Alloc_s MyAlloc = { MyAlloc_Realloc, MyAlloc_SizeOf, nullptr };
+static Alloc_s MyAlloc = { MyAlloc_Realloc, MyAlloc_SizeOf };
 
 //======================================================================================
 static AssertAction::Kind MyAssertHook( ptr_t context, const AssertInfo_s& info, cstr_t msg )

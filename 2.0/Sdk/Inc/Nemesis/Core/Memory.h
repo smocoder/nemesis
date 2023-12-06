@@ -12,9 +12,8 @@ namespace Nemesis
 
 	struct Alloc_s
 	{
-		ptr_t  (NE_CALLBK *Realloc)( ptr_t context, ptr_t ptr, size_t size );
-		size_t (NE_CALLBK *SizeOf) ( ptr_t context, ptr_t ptr );
-		ptr_t Context;
+		ptr_t  (NE_CALLBK *Realloc)( Alloc_t alloc, ptr_t ptr, size_t size );
+		size_t (NE_CALLBK *SizeOf) ( Alloc_t alloc, ptr_t ptr );
 	};
 }
 
