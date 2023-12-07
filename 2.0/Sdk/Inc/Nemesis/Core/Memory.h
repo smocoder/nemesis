@@ -53,11 +53,28 @@ namespace Nemesis
 	void	NE_API Mem_Free	  ( Alloc_t alloc, ptr_t ptr );
 	size_t	NE_API Mem_SizeOf ( Alloc_t alloc, ptr_t ptr );
 	ptr_t	NE_API Mem_Clone  ( Alloc_t alloc, cptr_t ptr, size_t size );
+}
 
-	template < typename T >inline T* Mem_Alloc ( Alloc_t alloc )			{ return (T*) Mem_Alloc ( alloc,	   sizeof(T) ); }
-	template < typename T >inline T* Mem_Alloc ( Alloc_t alloc, int num )	{ return (T*) Mem_Alloc ( alloc, num * sizeof(T) ); }
-	template < typename T >inline T* Mem_Calloc( Alloc_t alloc )			{ return (T*) Mem_Calloc( alloc,	   sizeof(T) ); }
-	template < typename T >inline T* Mem_Calloc( Alloc_t alloc, int num )	{ return (T*) Mem_Calloc( alloc, num * sizeof(T) ); }
+//======================================================================================
+//	Typed Api
+//======================================================================================
+namespace Nemesis
+{
+	template < typename T >inline T* Mem_Alloc  ( Alloc_t alloc )					{ return (T*) Mem_Alloc  ( alloc	 ,	     sizeof(T) ); }
+	template < typename T >inline T* Mem_Alloc  ( Alloc_t alloc, int num )			{ return (T*) Mem_Alloc  ( alloc	 , num * sizeof(T) ); }
+	template < typename T >inline T* Mem_Calloc ( Alloc_t alloc )					{ return (T*) Mem_Calloc ( alloc	 ,	     sizeof(T) ); }
+	template < typename T >inline T* Mem_Calloc ( Alloc_t alloc, int num )			{ return (T*) Mem_Calloc ( alloc	 , num * sizeof(T) ); }
+	template < typename T >inline T* Arr_Realloc( Alloc_t alloc, T* ptr, int num )	{ return (T*) Mem_Realloc( alloc, ptr, num * sizeof(T) ); }
+
+	template < typename T >	inline T* Arr_Zero( T* dst				, int count )	{ return (T*)Mem_Zero( dst		, count * sizeof(T) ); }
+	template < typename T >	inline T* Arr_Cpy ( T* dst, const T* src, int count )	{ return (T*)Mem_Cpy ( dst, src , count * sizeof(T) ); }
+	template < typename T >	inline T* Arr_Mov ( T* dst, const T* src, int count )	{ return (T*)Mem_Mov ( dst, src , count * sizeof(T) ); }
+	template < typename T > inline T* Arr_Set ( T* dst, const T& src, int count )
+	{
+		for ( int i = 0; i < count; ++i )
+			dst[i] = src;
+		return dst;
+	}
 }
 
 //======================================================================================

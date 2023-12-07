@@ -86,6 +86,148 @@ static void TestCountedAllocHook()
 	Mem_SetHook( nullptr );
 }
 
+static void Array_Print( cstr_t title, const Array<int>& arr )
+{
+	printf("%s:\n", title);
+	for ( int v : arr )
+		printf("%d\n", v);
+}
+
+static void Array_SetIndex( Array<int>& arr, int first, int count )
+{
+	for ( int i = 0; i < count; ++i )
+		arr[first+i] = first+i;
+}
+
+static void Array_AddIndex( Array<int>& arr, int count )
+{
+	const int first = arr.Count; 
+	for ( int i = 0; i < count; ++i )
+		Array_Append( arr, first+i );
+}
+
+static void Array_SetRanged( Array<int>& arr, int val )
+{
+	for ( int& v : arr )
+		v = val;
+}
+
+static void TestArray()
+{
+	const int values [] = { 42, 17, 12, 7, 3 };
+
+	Array<int> arr = {};
+	Array_Reserve( arr, 20 );								Array_Print( "Reserve", arr );
+	Array_Resize( arr, 10 );								Array_Print( "Resize", arr );
+	Array_Zero( arr );										Array_Print( "Zero", arr );
+	Array_Fill( arr, -1 );									Array_Print( "Fill (-1)", arr );
+	Array_SetRanged( arr, -42 );							Array_Print( "SetRanged", arr );
+	Array_SetIndex( arr, 0, 10 );							Array_Print( "SetIndex", arr );
+	Array_AddIndex( arr, 10 );								Array_Print( "AddIndex", arr );
+	Array_RemoveSwapAt( arr, 0 );							Array_Print( "RemoveSwapAt", arr );
+	Array_RemoveAt( arr, 0 );								Array_Print( "RemoveAt", arr );
+	Array_Reset( arr );										Array_Print( "Reset", arr );
+	Array_Append( arr, values, NeCountOf(values) );			Array_Print( "Append (Multi)", arr );
+	Array_InsertAt( arr, 1, values, NeCountOf(values) );	Array_Print( "InsertAt (Multi)", arr );
+	Array_RemoveAt( arr, 1, NeCountOf(values) );			Array_Print( "RemoveAt (Multi)", arr );
+	Array_Resize( arr, 10 );
+	Array_SetIndex( arr, 0, 10 );							Array_Print( "SetIndex", arr );
+	{
+		const int val = 7;
+		const int idx = Array_LinearFind( arr, val );
+		printf( "LinearFind(%d): %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Array_LinearFind( arr, val );
+		printf( "LinearFind(%f): %d\n", val, idx);
+	}
+	{
+		struct Cmp1
+		{
+			static bool Equals( int a, float b ) { return a == b; }
+		};
+		const float val = 7.0f;
+		const int idx = Array_LinearFind<Cmp1>( arr, val );
+		printf( "LinearFind<Comparer>(%f): %d\n", val, idx);
+	}
+	{
+		struct Cmp2
+		{
+			bool operator() ( int a, float b ) const { return a == b; }
+		};
+
+		const float val = 7.0f;
+		const int idx = Array_LinearFind( arr, val, Cmp2 {} );
+		printf( "LinearFind(Predicate)(%f): %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Array_LinearFind( arr, val, []( int a, float b ) { return a == b; } );
+		printf( "LinearFind(Lambda)(%f): %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Array_BinaryFind( arr, val );
+		printf( "BinaryFind(%d): %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Array_BinaryFind( arr, val );
+		printf( "BinaryFind(%f): %d\n", val, idx);
+	}
+	{
+		struct Cmp3
+		{
+			static int Compare( int a, float b ) 
+			{ 
+				if (a == b)
+					return 0;
+				if (a > b)
+					return 1;
+				return -1;
+			}
+		};
+		const float val = 7.0f;
+		const int idx = Array_BinaryFind<Cmp3>( arr, val );
+		printf( "BinaryFind<Comparer>(%f): %d\n", val, idx);
+	}
+	{
+		struct Cmp4
+		{
+			int operator() ( int a, float b ) const 
+			{ 
+				if (a == b)
+					return 0;
+				if (a > b)
+					return 1;
+				return -1;
+			}
+		};
+
+		const float val = 7.0f;
+		const int idx = Array_BinaryFind( arr, val, Cmp4 {} );
+		printf( "BinaryFind(Predicate)(%f): %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Array_BinaryFind
+			( arr
+			, val
+			, []( int a, float b ) 
+				{ 
+					if (a == b)
+						return 0;
+					if (a > b)
+						return 1;
+					return -1;
+				} 
+			);
+		printf( "LinearFind(Lambda)(%f): %d\n", val, idx);
+	}
+	Array_Clear( arr );
+}
+
 //======================================================================================
 int main( int argc, const char** argv )
 {
@@ -93,6 +235,7 @@ int main( int argc, const char** argv )
 	TestAllocHook();
 	TestCountedAlloc();
 	TestCountedAllocHook();
+	TestArray();
 
 	return 0;
 }

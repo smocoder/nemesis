@@ -130,7 +130,7 @@ namespace Nemesis
 	ptr_t Mem_Realloc( Alloc_t alloc, ptr_t ptr, size_t size )
 	{
 		const Alloc_t inst = Alloc_Select( alloc );
-		return alloc->Realloc( alloc, ptr, size );
+		return inst->Realloc( alloc, ptr, size );
 	}
 
 	void Mem_Free( Alloc_t alloc, ptr_t ptr )
