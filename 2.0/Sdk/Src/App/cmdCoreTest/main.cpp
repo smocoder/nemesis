@@ -132,101 +132,6 @@ static void TestArray()
 	Array_InsertAt( arr, 1, values, NeCountOf(values) );	Array_Print( "InsertAt (Multi)", arr );
 	Array_RemoveAt( arr, 1, NeCountOf(values) );			Array_Print( "RemoveAt (Multi)", arr );
 	Array_RemoveAt( arr, 0, arr.Count );					Array_Print( "RemoveAt (All)", arr );
-	Array_Resize( arr, 10 );
-	Array_SetIndex( arr, 0, 10 );							Array_Print( "SetIndex", arr );
-	{
-		const int val = 7;
-		const int idx = Array_LinearFind( arr, val );
-		printf( "LinearFind(%d): %d\n", val, idx);
-	}
-	{
-		const float val = 7.0f;
-		const int idx = Array_LinearFind( arr, val );
-		printf( "LinearFind(%f): %d\n", val, idx);
-	}
-	{
-		struct Cmp1
-		{
-			static bool Equals( int a, float b ) { return a == b; }
-		};
-		const float val = 7.0f;
-		const int idx = Array_LinearFind<Cmp1>( arr, val );
-		printf( "LinearFind<Comparer>(%f): %d\n", val, idx);
-	}
-	{
-		struct Cmp2
-		{
-			bool operator() ( int a, float b ) const { return a == b; }
-		};
-
-		const float val = 7.0f;
-		const int idx = Array_LinearFind( arr, val, Cmp2 {} );
-		printf( "LinearFind(Predicate)(%f): %d\n", val, idx);
-	}
-	{
-		const float val = 7.0f;
-		const int idx = Array_LinearFind( arr, val, []( int a, float b ) { return a == b; } );
-		printf( "LinearFind(Lambda)(%f): %d\n", val, idx);
-	}
-	{
-		const int val = 7;
-		const int idx = Array_BinaryFind( arr, val );
-		printf( "BinaryFind(%d): %d\n", val, idx);
-	}
-	{
-		const float val = 7.0f;
-		const int idx = Array_BinaryFind( arr, val );
-		printf( "BinaryFind(%f): %d\n", val, idx);
-	}
-	{
-		struct Cmp3
-		{
-			static int Compare( int a, float b ) 
-			{ 
-				if (a == b)
-					return 0;
-				if (a > b)
-					return 1;
-				return -1;
-			}
-		};
-		const float val = 7.0f;
-		const int idx = Array_BinaryFind<Cmp3>( arr, val );
-		printf( "BinaryFind<Comparer>(%f): %d\n", val, idx);
-	}
-	{
-		struct Cmp4
-		{
-			int operator() ( int a, float b ) const 
-			{ 
-				if (a == b)
-					return 0;
-				if (a > b)
-					return 1;
-				return -1;
-			}
-		};
-
-		const float val = 7.0f;
-		const int idx = Array_BinaryFind( arr, val, Cmp4 {} );
-		printf( "BinaryFind(Predicate)(%f): %d\n", val, idx);
-	}
-	{
-		const float val = 7.0f;
-		const int idx = Array_BinaryFind
-			( arr
-			, val
-			, []( int a, float b ) 
-				{ 
-					if (a == b)
-						return 0;
-					if (a > b)
-						return 1;
-					return -1;
-				} 
-			);
-		printf( "LinearFind(Lambda)(%f): %d\n", val, idx);
-	}
 	Array_Clear( arr );
 }
 
@@ -272,6 +177,161 @@ static void TestSpan()
 	}
 }
 
+static void TestSearch()
+{
+	Array<int> arr = {};
+	Array_Resize( arr, 10 );
+	Array_SetIndex( arr, 0, 10 );
+
+	// --- Operators
+
+	{
+		const int val = 7;
+		const int idx = Find_Linear( arr, val );
+		printf( "Find_Linear (Array, Intrinsic): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear( Array_Span(arr), val );
+		printf( "Find_Linear (Span, Intrinsic): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary( arr, val );
+		printf( "Find_Binary (Array, Intrinsic): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary( Array_Span(arr), val );
+		printf( "Find_Binary (Span, Intrinsic): Val: %f -> Idx: %d\n", val, idx);
+	}
+
+	// --- Comparer
+
+	struct Comparer
+	{
+		static bool Equals( int a, int   b ) { return a == b; }
+		static bool Equals( int a, float b ) { return a == b; }
+		static int Compare( int a, int b )   { return a-b; }
+		static int Compare( int a, float b ) 
+		{ 
+			if (a == b)
+				return 0;
+			if (a > b)
+				return 1;
+			return -1;
+		}
+	};
+
+	{
+		const int val = 7;
+		const int idx = Find_Linear<Comparer>( arr, val );
+		printf( "Find_Linear (Array, Comparer): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear<Comparer>( Array_Span(arr), val );
+		printf( "Find_Linear (Span, Comparer): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary<Comparer>( arr, val );
+		printf( "Find_Binary (Array, Comparer): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary<Comparer>( Array_Span(arr), val );
+		printf( "Find_Binary (Span, Comparer): Val: %f -> Idx: %d\n", val, idx);
+	}
+
+	// --- Predicate
+
+	struct Equals
+	{
+		bool operator () ( int a, int   b ) const { return a == b; }
+		bool operator () ( int a, float b ) const { return a == b; }
+	};
+
+	struct Compare
+	{
+		int operator () ( int a, int b )   const { return a-b; }
+		int operator () ( int a, float b ) const
+		{ 
+			if (a == b)
+				return 0;
+			if (a > b)
+				return 1;
+			return -1;
+		}
+	};
+
+	{
+		const int val = 7;
+		const int idx = Find_Linear( arr, val, Equals {} );
+		printf( "Find_Linear (Array, Predicate): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear( Array_Span(arr), val, Equals {} );
+		printf( "Find_Linear (Span, Predicate): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary( arr, val, Compare {} );
+		printf( "Find_Binary (Array, Predicate): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary( Array_Span(arr), val, Compare {} );
+		printf( "Find_Binary (Span, Predicate): Val: %f -> Idx: %d\n", val, idx);
+	}
+
+	// --- Lambda
+
+	{
+		const int val = 7;
+		const int idx = Find_Linear(arr, val, [] ( int a, int b ) { return a == b; } );
+		printf( "Find_Linear (Array, Lambda): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear(arr, val, [] ( int a, int b ) { return a == b; } );
+		printf( "Find_Linear (Span, Lambda): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary
+			( arr
+			, val
+			, [] ( int a, float b )
+				{
+					if (a == b)
+						return 0;
+					if (a > b)
+						return 1;
+					return -1;
+				}
+			);
+		printf( "Find_Binary (Array, Lambda): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary
+			( Array_Span(arr)
+			, val
+			, [] ( int a, float b )
+				{
+					if (a == b)
+						return 0;
+					if (a > b)
+						return 1;
+					return -1;
+				}
+			);
+		printf( "Find_Binary (Span, Lambda): Val: %f -> Idx: %d\n", val, idx);
+	}
+}
+
 //======================================================================================
 int main( int argc, const char** argv )
 {
@@ -281,6 +341,7 @@ int main( int argc, const char** argv )
 	TestCountedAllocHook();
 	TestArray();
 	TestSpan();
+	TestSearch();
 
 	return 0;
 }

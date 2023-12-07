@@ -20,4 +20,5 @@
 #include <Nemesis/Core/Debug.h>
 #include <Nemesis/Core/Memory.h>
 #include <Nemesis/Core/Array.h>
+#include <Nemesis/Core/Search.h>
 NE_LINK("libNeCore.lib")

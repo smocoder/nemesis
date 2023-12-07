@@ -96,6 +96,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\Search.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Memory.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Array.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Assert.h" />
