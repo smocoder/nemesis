@@ -39,6 +39,7 @@ namespace Nemesis
 namespace Nemesis
 {
 	AssertHook_s		NE_API Assert_GetHook();
+	void				NE_API Assert_SetHook();
 	void				NE_API Assert_SetHook( const AssertHook_s& hook );
 	AssertAction::Kind	NE_API Assert_Failure( const AssertInfo_s& info, cstr_t msg, ... );
 }

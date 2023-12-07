@@ -1,7 +1,7 @@
 #pragma once
 
 //======================================================================================
-#include "Assert.h"
+#include "Span.h"
 #include "Memory.h"
 
 //======================================================================================
@@ -87,18 +87,6 @@ namespace Nemesis
 	}
 
 	template <typename T>
-	inline void Array_Zero( Array<T>& a )
-	{
-		Arr_Zero<T>( a.Item, a.Count );
-	}
-
-	template <typename T>
-	inline void Array_Fill( Array<T>& a, const T& value )
-	{
-		Arr_Set<T>( a.Item, value, a.Count );
-	}
-
-	template <typename T>
 	inline void Array_Clear( Array<T>& a )
 	{
 		Mem_Free( a.Alloc, a.Item );
@@ -134,6 +122,20 @@ namespace Nemesis
 			Array_Reserve( a, new_capacity );
 		}
 		a.Count = new_count;
+	}
+
+	//----------------------------------------------------------------------------------
+
+	template <typename T>
+	inline void Array_Zero( Array<T>& a )
+	{
+		Arr_Zero<T>( a.Item, a.Count );
+	}
+
+	template <typename T>
+	inline void Array_Fill( Array<T>& a, const T& value )
+	{
+		Arr_Set<T>( a.Item, value, a.Count );
 	}
 
 	//----------------------------------------------------------------------------------
@@ -193,11 +195,11 @@ namespace Nemesis
 	inline void Array_RemoveAt( Array<T>& a, int index, int count )
 	{
 		NeAssertBounds(index, a.Count);
-		NeAssertBounds(index + count, a.Count);
 		NeAssertOut(count >= 0, "Invalid count: %d", count);
 		if (!count)
 			return;
 		const int end = index + count;
+		NeAssert(end <= a.Count);
 		Arr_Mov<T>( a.Item + index, a.Item + end, a.Count - end );
 		a.Count -= count;
 	}
@@ -242,6 +244,50 @@ namespace Nemesis
 	inline size_t Array_GetReservedSize( const Array<T>& a )
 	{
 		return a.Capacity * sizeof(T);
+	}
+
+	//----------------------------------------------------------------------------------
+
+	template <typename T>
+	inline Span<T> Array_SpanMid( Array<T>& a, int first, int count )
+	{
+		NeAssertBounds(first, a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((first + count) <= a.Count);
+		return Span<T> { a.Item + first, count };
+	}
+
+	template <typename T>
+	inline Span<const T> Array_SpanMid( const Array<T>& a, int first, int count )
+	{
+		NeAssertBounds(first, a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((first + count) <= a.Count);
+		return Span<const T> { a.Item + first, count };
+	}
+
+	template <typename T>
+	inline Span<T> Array_SpanLeft( Array<T>& a, int count )
+	{
+		return Array_SpanMid( a, 0, count );
+	}
+
+	template <typename T>
+	inline Span<const T> Array_SpanLeft( const Array<T>& a, int count )
+	{
+		return Array_SpanMid( a, 0, count );
+	}
+
+	template <typename T>
+	inline Span<T> Array_SpanRight( Array<T>& a, int count )
+	{
+		return Array_SpanMid( a, a.Count - count, count );
+	}
+
+	template <typename T>
+	inline Span<const T> Array_SpanRight( const Array<T>& a, int count )
+	{
+		return Array_SpanMid( a, a.Count - count, count );
 	}
 
 	//----------------------------------------------------------------------------------

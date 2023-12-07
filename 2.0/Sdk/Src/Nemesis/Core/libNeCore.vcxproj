@@ -100,6 +100,7 @@
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Array.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Assert.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Debug.h" />
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\Span.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\String.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Target.h" />
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Types.h" />

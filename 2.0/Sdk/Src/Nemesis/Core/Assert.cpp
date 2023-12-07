@@ -81,6 +81,11 @@ namespace Nemesis
 		return AssertHook;
 	}
 
+	void Assert_SetHook()
+	{
+		AssertHook = { Assert_DefaultHook };
+	}
+
 	void Assert_SetHook( const AssertHook_s& hook )
 	{
 		AssertHook = hook;

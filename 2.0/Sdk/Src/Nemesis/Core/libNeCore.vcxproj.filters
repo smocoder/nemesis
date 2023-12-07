@@ -48,6 +48,9 @@
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Memory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\Span.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

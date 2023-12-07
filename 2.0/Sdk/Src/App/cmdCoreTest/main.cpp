@@ -29,6 +29,7 @@ static void TestAssertHook()
 {
 	Assert_SetHook( AssertHook_s { MyAssertHook, nullptr } );
 	NeAssert(0 == 1);
+	Assert_SetHook();
 }
 
 static void TestAllocHook()
@@ -130,6 +131,7 @@ static void TestArray()
 	Array_Append( arr, values, NeCountOf(values) );			Array_Print( "Append (Multi)", arr );
 	Array_InsertAt( arr, 1, values, NeCountOf(values) );	Array_Print( "InsertAt (Multi)", arr );
 	Array_RemoveAt( arr, 1, NeCountOf(values) );			Array_Print( "RemoveAt (Multi)", arr );
+	Array_RemoveAt( arr, 0, arr.Count );					Array_Print( "RemoveAt (All)", arr );
 	Array_Resize( arr, 10 );
 	Array_SetIndex( arr, 0, 10 );							Array_Print( "SetIndex", arr );
 	{
@@ -228,6 +230,48 @@ static void TestArray()
 	Array_Clear( arr );
 }
 
+static void Span_Print( cstr_t title, const Span<const int>& span )
+{
+	printf("%s:\n", title);
+	for ( int v : span )
+		printf("%d\n", v);
+}
+
+static void TestSpan()
+{
+	Array<int> arr = {};
+	Array_Resize( arr, 30 );
+	{
+		// non-const
+		Span<int> span_l = Array_SpanLeft ( arr, 10 );
+		Span<int> span_r = Array_SpanRight( arr, 10 );
+		Span<int> span_m = Array_SpanMid  ( arr, 10, arr.Count - span_l.Count - span_r.Count );
+		Span_Fill( span_l, 42 );
+		Span_Fill( span_r, 17 );
+		Span_Zero( span_m );
+		Array_Print( "Fill (Span)", arr );
+	}
+	{
+		// const conversion operator
+		const Span<const int> span_l = Array_SpanLeft ( arr, 10 );
+		const Span<const int> span_r = Array_SpanRight( arr, 10 );
+		const Span<const int> span_m = Array_SpanMid  ( arr, 10, arr.Count - span_l.Count - span_r.Count );
+		Span_Print( "SpanLeft" , span_l );
+		Span_Print( "SpanRight", span_r );
+		Span_Print( "SpanMid"  , span_m );
+	}
+	{
+		// const overload
+		const Array<int>& const_arr = arr;
+		const Span<const int> span_l = Array_SpanLeft ( const_arr, 10 );
+		const Span<const int> span_r = Array_SpanRight( const_arr, 10 );
+		const Span<const int> span_m = Array_SpanMid  ( const_arr, 10, arr.Count - span_l.Count - span_r.Count );
+		Span_Print( "SpanLeft" , span_l );
+		Span_Print( "SpanRight", span_r );
+		Span_Print( "SpanMid"  , span_m );
+	}
+}
+
 //======================================================================================
 int main( int argc, const char** argv )
 {
@@ -236,6 +280,7 @@ int main( int argc, const char** argv )
 	TestCountedAlloc();
 	TestCountedAllocHook();
 	TestArray();
+	TestSpan();
 
 	return 0;
 }
