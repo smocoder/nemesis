@@ -10,19 +10,73 @@ namespace Nemesis
 	template <typename T>
 	struct Array
 	{
+	public:
+		explicit Array( Alloc_t alloc ); 
+		Array( const Array<T>& rhs );
+		Array( Array<T>&& rhs );
+		Array();
+		~Array();
+
+	public:
 		T* Item;
 		int Count;
 		int Capacity;
 		Alloc_t Alloc;
 
+	public:
 		T&		 operator [] ( int index );
 		const T& operator [] ( int index ) const;
+
+		Array<T>& operator = ( const Array<T>& rhs );
+		Array<T>& operator = ( Array<T>&& rhs );
 	};
 }
 
 //======================================================================================
 namespace Nemesis
 {
+	template <typename T>
+	Array<T>::Array( Alloc_t alloc )
+		: Item( nullptr )
+		, Count( 0 )
+		, Capacity( 0 )
+		, Alloc( alloc )
+	{}
+
+	template <typename T>
+	Array<T>::Array( const Array<T>& rhs )
+		: Item( nullptr )
+		, Count( 0 )
+		, Capacity( 0 )
+		, Alloc( rhs.Alloc )
+	{
+		operator = (rhs);
+	}
+
+	template <typename T>
+	Array<T>::Array( Array<T>&& rhs )
+		: Item( rhs.Item )
+		, Count( rhs.Count )
+		, Capacity( rhs.Capacity )
+		, Alloc( rhs.Alloc )
+	{
+		Array_Init( rhs, nullptr );
+	}
+
+	template <typename T>
+	Array<T>::Array()
+		: Item( nullptr )
+		, Count( 0 )
+		, Capacity( 0 )
+		, Alloc( nullptr )
+	{}
+
+	template <typename T>
+	Array<T>::~Array()
+	{
+		Array_Clear( *this );
+	}
+
 	template <typename T>
 	inline T& Array<T>::operator [] ( int index )	
 	{ 
@@ -35,6 +89,25 @@ namespace Nemesis
 	{ 
 		NeAssertBounds(index, Count); 
 		return Item[index]; 
+	}
+
+	template <typename T>
+	inline Array<T>& Array<T>::operator = ( const Array<T>& rhs )
+	{
+		Array_Resize( *this, rhs.Count );
+		Array_Copy( *this, 0, rhs.Item, rhs.Count );
+		return *this;
+	}
+
+	template <typename T>
+	inline Array<T>& Array<T>::operator = ( Array<T>&& rhs )
+	{
+		Item = rhs.Item;
+		Count = rhs.Count;
+		Capacity = rhs.Capacity;
+		Alloc = rhs.Alloc;
+		Array_Init( rhs, nullptr );
+		return *this;
 	}
 }
 
@@ -136,6 +209,23 @@ namespace Nemesis
 	inline void Array_Fill( Array<T>& a, const T& value )
 	{
 		Arr_Set<T>( a.Item, value, a.Count );
+	}
+
+	template <typename T>
+	inline T* Array_Fill( Array<T>& a, const T& value, int index, int count )
+	{
+		NeAssertBounds(index, a.Count);
+		NeAssert((index + count) <= a.Count);
+		return Arr_Set<T>( a.Item + index, value, count );
+	}
+
+	template <typename T>
+	inline T* Array_Copy( Array<T>& a, int index, const T* value, int count )
+	{
+		NeAssertBounds(index, a.Count);
+		NeAssert((index + count) <= a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		return Arr_Cpy( a.Item + index, value, count );
 	}
 
 	//----------------------------------------------------------------------------------

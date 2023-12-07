@@ -113,11 +113,19 @@ static void Array_SetRanged( Array<int>& arr, int val )
 		v = val;
 }
 
+static Array<int> Array_Build()
+{
+	Array<int> arr = {};
+	Array_Resize( arr, 10 );
+	Array_SetIndex( arr, 0, 10 );
+	return arr;
+}
+
 static void TestArray()
 {
 	const int values [] = { 42, 17, 12, 7, 3 };
 
-	Array<int> arr = {};
+	Array<int> arr;
 	Array_Reserve( arr, 20 );								Array_Print( "Reserve", arr );
 	Array_Resize( arr, 10 );								Array_Print( "Resize", arr );
 	Array_Zero( arr );										Array_Print( "Zero", arr );
@@ -133,6 +141,20 @@ static void TestArray()
 	Array_RemoveAt( arr, 1, NeCountOf(values) );			Array_Print( "RemoveAt (Multi)", arr );
 	Array_RemoveAt( arr, 0, arr.Count );					Array_Print( "RemoveAt (All)", arr );
 	Array_Clear( arr );
+
+	Array<int> arr1;
+	Array_Resize( arr1, 10 );
+	Array_SetIndex( arr1, 0, 10 );
+
+	Array<int> arr2 = arr1;
+	Array_RemoveAt( arr1, 0, arr1.Count );
+
+	Array<int> arr3 = Array_Build();
+	Array_Print( "Move Ctor", arr3 );
+
+	Array<int>&& arr4 = {};
+	arr4.operator=(static_cast<Array<int>&&>(arr3));
+	Array_Print( "Move Operator", arr4 );
 }
 
 static void Span_Print( cstr_t title, const Span<const int>& span )
