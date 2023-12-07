@@ -183,29 +183,71 @@ static void TestSearch()
 	Array_Resize( arr, 10 );
 	Array_SetIndex( arr, 0, 10 );
 
+	const Span<const int> span = Array_Span( arr );
+
 	// --- Operators
 
 	{
 		const int val = 7;
 		const int idx = Find_Linear( arr, val );
-		printf( "Find_Linear (Array, Intrinsic): Val: %d -> Idx: %d\n", val, idx);
+		printf( "Find (Linear, Int, Intrinsic, Array): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const int val = 7;
-		const int idx = Find_Linear( Array_Span(arr), val );
-		printf( "Find_Linear (Span, Intrinsic): Val: %d -> Idx: %d\n", val, idx);
+		const int idx = Find_Linear( span, val );
+		printf( "Find (Linear, Int, Intrinsic, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear( span.Item, span.Count, val );
+		printf( "Find (Linear, Int, Intrinsic, Plain): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( arr, val );
+		printf( "Find (Linear, Float, Intrinsic, Array): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( span, val );
+		printf( "Find (Linear, Float, Intrinsic, Span): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( span.Item, span.Count, val );
+		printf( "Find (Linear, Float, Intrinsic, Plain): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( arr, val );
+		printf( "Find (Binary, Int, Intrinsic, Array): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( span, val );
+		printf( "Find (Binary, Int, Intrinsic, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( span.Item, span.Count, val );
+		printf( "Find (Binary, Int, Intrinsic, Plain): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
 		const int idx = Find_Binary( arr, val );
-		printf( "Find_Binary (Array, Intrinsic): Val: %f -> Idx: %d\n", val, idx);
+		printf( "Find (Binary, Float, Intrinsic, Array): Val: %f -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
-		const int idx = Find_Binary( Array_Span(arr), val );
-		printf( "Find_Binary (Span, Intrinsic): Val: %f -> Idx: %d\n", val, idx);
+		const int idx = Find_Binary( span, val );
+		printf( "Find (Binary, Float, Intrinsic, Span): Val: %f -> Idx: %d\n", val, idx);
 	}
-
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary( span.Item, span.Count, val );
+		printf( "Find (Binary, Float, Intrinsic, Plain): Val: %f -> Idx: %d\n", val, idx);
+	}
+	 
 	// --- Comparer
 
 	struct Comparer
@@ -226,24 +268,64 @@ static void TestSearch()
 	{
 		const int val = 7;
 		const int idx = Find_Linear<Comparer>( arr, val );
-		printf( "Find_Linear (Array, Comparer): Val: %d -> Idx: %d\n", val, idx);
+		printf( "Find (Linear, Int, Comparer, Array): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const int val = 7;
-		const int idx = Find_Linear<Comparer>( Array_Span(arr), val );
-		printf( "Find_Linear (Span, Comparer): Val: %d -> Idx: %d\n", val, idx);
+		const int idx = Find_Linear<Comparer>( span, val );
+		printf( "Find (Linear, Int, Comparer, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear<Comparer>( span.Item, span.Count, val );
+		printf( "Find (Linear, Int, Comparer, Plain): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear<Comparer>( arr, val );
+		printf( "Find (Linear, Float, Comparer, Array): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear<Comparer>( span, val );
+		printf( "Find (Linear, Float, Comparer, Span): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear<Comparer>( span.Item, span.Count, val );
+		printf( "Find (Linear, Float, Comparer, Plain): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary<Comparer>( arr, val );
+		printf( "Find (Binary, Int, Comparer, Array): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary<Comparer>( span, val );
+		printf( "Find (Binary, Int, Comparer, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary<Comparer>( span.Item, span.Count, val );
+		printf( "Find (Binary, Int, Comparer, Plain): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
 		const int idx = Find_Binary<Comparer>( arr, val );
-		printf( "Find_Binary (Array, Comparer): Val: %f -> Idx: %d\n", val, idx);
+		printf( "Find (Binary, Float, Comparer, Array): Val: %f -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
-		const int idx = Find_Binary<Comparer>( Array_Span(arr), val );
-		printf( "Find_Binary (Span, Comparer): Val: %f -> Idx: %d\n", val, idx);
+		const int idx = Find_Binary<Comparer>( span, val );
+		printf( "Find (Binary, Float, Comparer, Span): Val: %f -> Idx: %d\n", val, idx);
 	}
-
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary<Comparer>( span.Item, span.Count, val );
+		printf( "Find (Binary, Float, Comparer, Plain): Val: %f -> Idx: %d\n", val, idx);
+	}
+	 
 	// --- Predicate
 
 	struct Equals
@@ -268,35 +350,110 @@ static void TestSearch()
 	{
 		const int val = 7;
 		const int idx = Find_Linear( arr, val, Equals {} );
-		printf( "Find_Linear (Array, Predicate): Val: %d -> Idx: %d\n", val, idx);
+		printf( "Find (Linear, Int, Predicate, Array): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const int val = 7;
-		const int idx = Find_Linear( Array_Span(arr), val, Equals {} );
-		printf( "Find_Linear (Span, Predicate): Val: %d -> Idx: %d\n", val, idx);
+		const int idx = Find_Linear( span, val, Equals {} );
+		printf( "Find (Linear, Int, Predicate, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear( span.Item, span.Count, val, Equals {} );
+		printf( "Find (Linear, Int, Predicate, Plain): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( arr, val, Equals {} );
+		printf( "Find (Linear, Float, Predicate, Array): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( span, val, Equals {} );
+		printf( "Find (Linear, Float, Predicate, Span): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( span.Item, span.Count, val, Equals {} );
+		printf( "Find (Linear, Float, Predicate, Plain): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( arr, val, Compare {} );
+		printf( "Find (Binary, Int, Predicate, Array): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( span, val, Compare {} );
+		printf( "Find (Binary, Int, Predicate, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( span.Item, span.Count, val, Compare {} );
+		printf( "Find (Binary, Int, Predicate, Plain): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
 		const int idx = Find_Binary( arr, val, Compare {} );
-		printf( "Find_Binary (Array, Predicate): Val: %f -> Idx: %d\n", val, idx);
+		printf( "Find (Binary, Float, Predicate, Array): Val: %f -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
-		const int idx = Find_Binary( Array_Span(arr), val, Compare {} );
-		printf( "Find_Binary (Span, Predicate): Val: %f -> Idx: %d\n", val, idx);
+		const int idx = Find_Binary( span, val, Compare {} );
+		printf( "Find (Binary, Float, Predicate, Span): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary( span.Item, span.Count, val, Compare {} );
+		printf( "Find (Binary, Float, Predicate, Plain): Val: %f -> Idx: %d\n", val, idx);
 	}
 
 	// --- Lambda
 
 	{
 		const int val = 7;
-		const int idx = Find_Linear(arr, val, [] ( int a, int b ) { return a == b; } );
-		printf( "Find_Linear (Array, Lambda): Val: %d -> Idx: %d\n", val, idx);
+		const int idx = Find_Linear( arr, val, [] ( int a, int b ) { return a == b; } );
+		printf( "Find (Linear, Int, Lambda, Array): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const int val = 7;
-		const int idx = Find_Linear(arr, val, [] ( int a, int b ) { return a == b; } );
-		printf( "Find_Linear (Span, Lambda): Val: %d -> Idx: %d\n", val, idx);
+		const int idx = Find_Linear( span, val, [] ( int a, int b ) { return a == b; } );
+		printf( "Find (Linear, Int, Lambda, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Linear( span.Item, span.Count, val, [] ( int a, int b ) { return a == b; } );
+		printf( "Find (Linear, Int, Lambda, Plain): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( arr, val, [] ( int a, float b ) { return a == b; } );
+		printf( "Find (Linear, Float, Lambda, Array): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( span, val, [] ( int a, float b ) { return a == b; } );
+		printf( "Find (Linear, Float, Lambda, Span): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Linear( span.Item, span.Count, val, [] ( int a, float b ) { return a == b; } );
+		printf( "Find (Linear, Float, Lambda, Plain): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( arr, val, [] ( int a, int b ) { return a-b; } );
+		printf( "Find (Binary, Int, Lambda, Array): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( span, val, [] ( int a, int b ) { return a-b; } );
+		printf( "Find (Binary, Int, Lambda, Span): Val: %d -> Idx: %d\n", val, idx);
+	}
+	{
+		const int val = 7;
+		const int idx = Find_Binary( span.Item, span.Count, val, [] ( int a, int b ) { return a-b; } );
+		printf( "Find (Binary, Int, Lambda, Plain): Val: %d -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
@@ -310,14 +467,14 @@ static void TestSearch()
 					if (a > b)
 						return 1;
 					return -1;
-				}
+				} 
 			);
-		printf( "Find_Binary (Array, Lambda): Val: %f -> Idx: %d\n", val, idx);
+		printf( "Find (Binary, Float, Lambda, Array): Val: %f -> Idx: %d\n", val, idx);
 	}
 	{
 		const float val = 7.0f;
 		const int idx = Find_Binary
-			( Array_Span(arr)
+			( span
 			, val
 			, [] ( int a, float b )
 				{
@@ -326,9 +483,26 @@ static void TestSearch()
 					if (a > b)
 						return 1;
 					return -1;
-				}
+				} 
 			);
-		printf( "Find_Binary (Span, Lambda): Val: %f -> Idx: %d\n", val, idx);
+		printf( "Find (Binary, Float, Lambda, Span): Val: %f -> Idx: %d\n", val, idx);
+	}
+	{
+		const float val = 7.0f;
+		const int idx = Find_Binary
+			( span.Item
+			, span.Count
+			, val
+			, [] ( int a, float b )
+				{
+					if (a == b)
+						return 0;
+					if (a > b)
+						return 1;
+					return -1;
+				} 
+			);
+		printf( "Find (Binary, Float, Lambda, Plain): Val: %f -> Idx: %d\n", val, idx);
 	}
 }
 
