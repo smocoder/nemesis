@@ -5,6 +5,8 @@
 #include "Memory.h"
 
 //======================================================================================
+//	Table Types
+//======================================================================================
 namespace Nemesis
 {
 	struct ReBase
@@ -24,6 +26,8 @@ namespace Nemesis
 	};
 }
 
+//======================================================================================
+//	Table
 //======================================================================================
 namespace Nemesis
 {
@@ -225,4 +229,33 @@ namespace Nemesis
 		return Table_SpanMid( a, 0, a.Count );
 	}
 
+}
+
+//======================================================================================
+//	Name Table
+//======================================================================================
+namespace Nemesis
+{
+	struct NameTable_s
+	{
+		Table<int32_t> Offsets;
+		Table<char>	   Strings;
+	};
+
+	uint8_t* NE_API NameTable_Bind		 ( NameTable_s* table, uint8_t* data );
+	void	 NE_API NameTable_ReBase	 ( NameTable_s* table, ReBase::Op op );
+	void	 NE_API NameTable_Init		 ( NameTable_s* table, const cstr_t* item, int count );
+	void	 NE_API NameTable_CopyData	 ( NameTable_s* table, const cstr_t* item, int count );
+	uint8_t* NE_API NameTable_Setup		 ( NameTable_s* table, uint8_t* pos, const cstr_t* item, int count, TableSetup::Mode mode );
+	int		 NE_API NameTable_GetNumNames( const NameTable_s* table );
+	cstr_t	 NE_API NameTable_GetName	 ( const NameTable_s* table, int index );
+}
+
+//======================================================================================
+namespace Nemesis
+{
+	inline uint8_t* NameTable_Setup( NameTable_s* table, uint8_t* pos, const Span<const cstr_t>& items, TableSetup::Mode mode )
+	{
+		return NameTable_Setup( table, pos, items.Item, items.Count, mode );
+	}
 }

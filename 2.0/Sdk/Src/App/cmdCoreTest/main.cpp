@@ -561,6 +561,7 @@ static void TestTable()
 		Table<AnimQuat_s> BindRot;
 		Table<int>		  Parents;
 		Table<char>		  FileName;
+		NameTable_s		  BoneNames;
 	};
 
 	struct AnimRigDesc_s
@@ -568,6 +569,7 @@ static void TestTable()
 		Span<const AnimVec3_s>	BindPos;
 		Span<const AnimQuat_s>	BindRot;
 		Span<const int>			Parents;
+		Span<const cstr_t>		BoneNames;
 		cstr_t					FileName;
 	};
 
@@ -587,20 +589,22 @@ static void TestTable()
 			const int file_name_len = 1+Str_Len( desc.FileName );
 
 			uint8_t* pos = (uint8_t*)(rig+1);
-			pos = Table_Setup( &rig->BindPos , pos, desc.BindPos				, mode );
-			pos = Table_Setup( &rig->BindRot , pos, desc.BindRot				, mode );
-			pos = Table_Setup( &rig->Parents , pos, desc.Parents				, mode );
-			pos = Table_Setup( &rig->FileName, pos, desc.FileName, file_name_len, mode );
+			pos = Table_Setup	 ( &rig->BindPos  , pos, desc.BindPos				 , mode );
+			pos = Table_Setup	 ( &rig->BindRot  , pos, desc.BindRot				 , mode );
+			pos = Table_Setup	 ( &rig->Parents  , pos, desc.Parents				 , mode );
+			pos = Table_Setup	 ( &rig->FileName , pos, desc.FileName, file_name_len, mode );
+			pos = NameTable_Setup( &rig->BoneNames, pos, desc.BoneNames				 , mode );
 
 			rig->Asset = AnimAsset_s { (uint32_t)Ptr_Tell( rig, pos ), ANIM_TOKEN_ASSET, ANIM_TOKEN_ARIG };
 		}
 
 		static void ReBase( AnimRig_s* rig, ReBase::Op op )
 		{
-			Table_ReBase( &rig->BindPos, op );
-			Table_ReBase( &rig->BindRot, op );
-			Table_ReBase( &rig->Parents, op );
-			Table_ReBase( &rig->FileName, op );
+			Table_ReBase	( &rig->BindPos	 , op );
+			Table_ReBase	( &rig->BindRot	 , op );
+			Table_ReBase	( &rig->Parents	 , op );
+			Table_ReBase	( &rig->FileName , op );
+			NameTable_ReBase( &rig->BoneNames, op );
 		}
 
 		static uint32_t CalcSize( const AnimRigDesc_s& desc )
@@ -661,15 +665,20 @@ static void TestTable()
 			printf( "  Hierarchy:\n" );
 			for ( int v : rig->Parents )
 				printf( "    %+2d\n", v );
+			printf( "  Bones:\n" );
+			const int num_bone_names = NameTable_GetNumNames( &rig->BoneNames );
+			for ( int i = 0; i < num_bone_names; ++i )
+				printf( "    %s\n", NameTable_GetName( &rig->BoneNames, i ) );
 		}
 
 	};
 
-	const Alloc_t	 alloc		= nullptr;
-	const AnimQuat_s rot_id		= { 0.0f, 0.0f, 0.0f, 1.0f };
-	const AnimVec3_s bone_pos[] = { { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-	const AnimQuat_s bone_rot[] = { { rot_id }, { rot_id }, { rot_id } };
-	const int		 parents [] = { -1, 0, 1 };
+	const Alloc_t	 alloc			= nullptr;
+	const AnimQuat_s rot_id			= { 0.0f, 0.0f, 0.0f, 1.0f };
+	const AnimVec3_s bone_pos	[]	= { { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+	const AnimQuat_s bone_rot	[]	= { { rot_id }, { rot_id }, { rot_id } };
+	const int		 parents	[]	= { -1, 0, 1 };
+	const cstr_t	 bone_names	[]	= { "Root", "Hips", "Head" }; 
 
 	// create from desc
 	{
@@ -677,6 +686,7 @@ static void TestTable()
 			{ Span_Cast(bone_pos)
 			, Span_Cast(bone_rot)
 			, Span_Cast(parents)
+			, Span_Cast(bone_names)
 			, "CreateFromDesc"
 			};
 
@@ -693,6 +703,7 @@ static void TestTable()
 			{ Span_Cast(bone_pos)
 			, Span_Cast(bone_rot)
 			, Span_Cast(parents)
+			, Span_Cast(bone_names)
 			, "CompileAndLocate"
 			};
 
