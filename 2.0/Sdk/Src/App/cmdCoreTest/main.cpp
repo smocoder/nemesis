@@ -528,6 +528,183 @@ static void TestSearch()
 	}
 }
 
+namespace
+{
+	static const uint32_t ANIM_TOKEN_ASSET = NeMakeFourCc( 'N', 'E', 'A', 'S' );
+	static const uint32_t ANIM_TOKEN_ARIG  = NeMakeFourCc( 'A', 'R', 'I', 'G' );
+}
+
+static void TestTable()
+{
+	struct AnimVec3_s
+	{
+		float x, y, z, _;
+	};
+
+	struct AnimQuat_s
+	{
+		float x, y, z, w;
+	};
+
+	struct AnimAsset_s
+	{
+		uint32_t Size;
+		uint32_t Token1;
+		uint32_t Token2;
+		uint32_t _pad_;
+	};
+
+	struct AnimRig_s
+	{
+		AnimAsset_s		  Asset;
+		Table<AnimVec3_s> BindPos;
+		Table<AnimQuat_s> BindRot;
+		Table<int>		  Parents;
+		Table<char>		  FileName;
+	};
+
+	struct AnimRigDesc_s
+	{
+		Span<const AnimVec3_s>	BindPos;
+		Span<const AnimQuat_s>	BindRot;
+		Span<const int>			Parents;
+		cstr_t					FileName;
+	};
+
+	struct AnimBuffer_s
+	{
+		Alloc_t  Alloc;
+		ptr_t    Data;
+		uint32_t Size;
+	};
+
+	struct AnimTool
+	{
+		static void Setup( AnimRig_s* rig, const AnimRigDesc_s& desc, TableSetup::Mode mode )
+		{
+			NeStaticAssert((sizeof(*rig) % 16) == 0);
+
+			const int file_name_len = 1+Str_Len( desc.FileName );
+
+			uint8_t* pos = (uint8_t*)(rig+1);
+			pos = Table_Setup( &rig->BindPos , pos, desc.BindPos				, mode );
+			pos = Table_Setup( &rig->BindRot , pos, desc.BindRot				, mode );
+			pos = Table_Setup( &rig->Parents , pos, desc.Parents				, mode );
+			pos = Table_Setup( &rig->FileName, pos, desc.FileName, file_name_len, mode );
+
+			rig->Asset = AnimAsset_s { (uint32_t)Ptr_Tell( rig, pos ), ANIM_TOKEN_ASSET, ANIM_TOKEN_ARIG };
+		}
+
+		static void ReBase( AnimRig_s* rig, ReBase::Op op )
+		{
+			Table_ReBase( &rig->BindPos, op );
+			Table_ReBase( &rig->BindRot, op );
+			Table_ReBase( &rig->Parents, op );
+			Table_ReBase( &rig->FileName, op );
+		}
+
+		static uint32_t CalcSize( const AnimRigDesc_s& desc )
+		{
+			AnimRig_s rig = {};
+			Setup( &rig, desc, TableSetup::CalcSize );
+			return rig.Asset.Size;
+		}
+
+		static AnimRig_s* Create( const AnimRigDesc_s& desc, ptr_t data, uint32_t size )
+		{
+			NeAssert(size >= CalcSize( desc ));
+			AnimRig_s* rig = (AnimRig_s*)data;
+			Setup( rig, desc, TableSetup::CopyData );
+			return rig;
+		}
+
+		static AnimBuffer_s Compile( Alloc_t alloc, const AnimRigDesc_s& desc )
+		{
+			const uint32_t size = CalcSize( desc );
+			AnimRig_s* rig = Create( desc, Mem_Calloc( alloc, size ), size );
+			ReBase( rig, ReBase::Detach );
+			return AnimBuffer_s { alloc, rig, size };
+		}
+
+		static void Locate( ptr_t data, uint32_t size, AnimRig_s** out )
+		{
+			AnimRig_s* rig = (AnimRig_s*)data;
+			NeAssert(rig->Asset.Size <= size);
+			NeAssert(rig->Asset.Token1 == ANIM_TOKEN_ASSET);
+			NeAssert(rig->Asset.Token2 == ANIM_TOKEN_ARIG);
+			ReBase( rig, ReBase::Attach );
+			*out = rig;
+		}
+
+		static void Locate( const AnimBuffer_s& buffer, AnimRig_s** out )
+		{
+			return Locate( buffer.Data, buffer.Size, out );
+		}
+
+		static void Free( const AnimBuffer_s& buffer )
+		{
+			Mem_Free( buffer.Alloc, buffer.Data );
+		}
+
+		static void Print( const AnimRig_s* rig )
+		{
+			printf( "Rig Name...: %s\n", rig->FileName.Item );
+			printf( "  Num Pos....: %d\n", rig->BindPos.Count );
+			printf( "  Num Rot....: %d\n", rig->BindRot.Count );
+			printf( "  Num Parents: %d\n", rig->Parents.Count );
+			printf( "  Positions:\n" );
+			for ( const AnimVec3_s& v : rig->BindPos )
+				printf( "    {%5.2f %5.2f %5.2f}\n", v.x, v.y, v.z );
+			printf( "  Rotations:\n" );
+			for ( const AnimQuat_s& v : rig->BindRot )
+				printf( "    {%5.2f %5.2f %5.2f %5.2f}\n", v.x, v.y, v.z, v.w );
+			printf( "  Hierarchy:\n" );
+			for ( int v : rig->Parents )
+				printf( "    %+2d\n", v );
+		}
+
+	};
+
+	const Alloc_t	 alloc		= nullptr;
+	const AnimQuat_s rot_id		= { 0.0f, 0.0f, 0.0f, 1.0f };
+	const AnimVec3_s bone_pos[] = { { 1.0f, 0.0f, 0.0f }, { 0.0f, 1.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+	const AnimQuat_s bone_rot[] = { { rot_id }, { rot_id }, { rot_id } };
+	const int		 parents [] = { -1, 0, 1 };
+
+	// create from desc
+	{
+		const AnimRigDesc_s rig_desc = 
+			{ Span_Cast(bone_pos)
+			, Span_Cast(bone_rot)
+			, Span_Cast(parents)
+			, "CreateFromDesc"
+			};
+
+		const uint32_t rig_size = AnimTool::CalcSize( rig_desc );
+		AnimRig_s* rig = AnimTool::Create( rig_desc, Mem_Calloc( alloc, rig_size ), rig_size );
+		NeAssert(rig && (rig->Asset.Size == rig_size));
+		AnimTool::Print(rig);
+		Mem_Free( alloc, rig );
+	}
+	
+	// compile from desc and locate
+	{
+		const AnimRigDesc_s rig_desc = 
+			{ Span_Cast(bone_pos)
+			, Span_Cast(bone_rot)
+			, Span_Cast(parents)
+			, "CompileAndLocate"
+			};
+
+		const AnimBuffer_s rig_buffer = AnimTool::Compile( alloc, rig_desc );
+		AnimRig_s* rig = nullptr;
+		AnimTool::Locate( rig_buffer, &rig );
+		NeAssert(rig && (rig->Asset.Size == rig_buffer.Size));
+		AnimTool::Print(rig);
+		AnimTool::Free( rig_buffer );
+	}
+}
+
 //======================================================================================
 int main( int argc, const char** argv )
 {
@@ -538,6 +715,7 @@ int main( int argc, const char** argv )
 	TestArray();
 	TestSpan();
 	TestSearch();
+	TestTable();
 
 	return 0;
 }

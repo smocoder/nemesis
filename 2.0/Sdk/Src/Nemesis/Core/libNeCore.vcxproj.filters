@@ -54,6 +54,9 @@
     <ClInclude Include="..\..\..\Inc\Nemesis\Core\Search.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Inc\Nemesis\Core\Table.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

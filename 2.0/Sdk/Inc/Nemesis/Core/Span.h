@@ -85,6 +85,18 @@ namespace Nemesis
 		span.Count = count;
 	}
 
+	template <typename T>
+	inline Span<T> Span_Cast( T* item, int count )
+	{
+		return Span<T> { item, count };
+	}
+
+	template <typename T, size_t S>
+	inline Span<T> Span_Cast( T (&items)[S] )
+	{
+		return Span<T> { items, S };
+	}
+
 	//----------------------------------------------------------------------------------
 
 	template <typename T>

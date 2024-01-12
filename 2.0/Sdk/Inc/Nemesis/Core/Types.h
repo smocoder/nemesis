@@ -29,6 +29,13 @@ inline void NeSwap( T& a, T& b )
 	a = temp;
 }
 
+inline uint32_t Mem_Align_Pow2( uint32_t pos, uint32_t align )
+{ return (pos + (align-1)) & ~(align-1); }
+
+inline uint32_t Mem_Align_16( uint32_t pos )
+{ return (pos + (16-1)) & ~(16-1); }
+
+
 //======================================================================================
 //	Global Macros
 //======================================================================================
@@ -63,6 +70,86 @@ namespace Nemesis
 	typedef const wchar_t*	wcstr_t;
 
 	typedef int				Result_t;
+}
+
+//======================================================================================
+//	Fundamental Functions
+//======================================================================================
+namespace Nemesis
+{
+	//----------------------------------------------------------------------------------
+
+	inline bool Size_IsPow2( size_t size )
+	{
+		return ((size != 0) && (size & (size-1)) == 0);
+	}
+
+	inline size_t Size_Align( size_t size, size_t align )
+	{
+		return ((size + (align - 1)) / align) * align;
+	}
+
+	inline size_t Size_Align_Pow2( size_t size, size_t align )
+	{
+		return (size + (align - 1)) & (~(align - 1));
+	}
+
+	inline bool Size_IsAligned_Pow2( size_t size, size_t align )
+	{
+		return (size & (align-1)) == 0;
+	}
+
+	//----------------------------------------------------------------------------------
+
+	inline ptrdiff_t PtrDiff_Align_Pow2( ptrdiff_t pos, size_t align )
+	{
+		return (pos + (align-1)) & ~(align-1);
+	}
+
+	//----------------------------------------------------------------------------------
+
+	inline uint32_t Mem_Align_Pow2( uint32_t pos, uint32_t align  )
+	{
+		return (pos + (align-1)) & ~(align-1);
+	}
+
+	inline uint32_t Mem_Align_16( uint32_t pos )
+	{
+		return (pos + (16-1)) & ~(16-1);
+	}
+
+	//----------------------------------------------------------------------------------
+
+	inline ptrdiff_t Ptr_Tell( cptr_t src, cptr_t dst )
+	{
+		return ((uint8_t*)dst) - ((uint8_t*)src);
+	}
+
+	inline ptr_t Ptr_Seek( ptr_t ptr, ptrdiff_t offset )
+	{
+		return ((uint8_t*)ptr) + offset;
+	}
+
+	inline cptr_t Ptr_Seek( cptr_t ptr, ptrdiff_t offset )
+	{
+		return ((const uint8_t*)ptr) + offset;
+	}
+
+	inline ptr_t Ptr_Align_Pow2( ptr_t pos, size_t align )
+	{
+		return (ptr_t)PtrDiff_Align_Pow2( (ptrdiff_t)pos, align );
+	}
+
+	inline cptr_t Ptr_Align_Pow2( cptr_t pos, size_t align )
+	{
+		return (ptr_t)PtrDiff_Align_Pow2( (ptrdiff_t)pos, align );
+	}
+
+	inline bool Ptr_IsAligned_Pow2( cptr_t pos, size_t align )
+	{
+		return Size_IsAligned_Pow2( (size_t)pos, align );
+	}
+
 }
 
 //======================================================================================
