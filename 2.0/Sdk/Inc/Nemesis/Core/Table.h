@@ -5,8 +5,6 @@
 #include "Memory.h"
 
 //======================================================================================
-//	Table Types
-//======================================================================================
 namespace Nemesis
 {
 	struct ReBase
@@ -24,13 +22,7 @@ namespace Nemesis
 		, CalcSize
 		};
 	};
-}
 
-//======================================================================================
-//	Table
-//======================================================================================
-namespace Nemesis
-{
 	template < typename T >
 	struct Table
 	{
@@ -48,11 +40,9 @@ namespace Nemesis
 		T&		 operator [] ( int index );
 		const T& operator [] ( int index ) const;
 	};
-}
 
-//======================================================================================
-namespace Nemesis
-{
+	//==================================================================================
+
 	template <typename T>
 	inline T& Table<T>::operator [] ( int index )	
 	{ 
@@ -66,25 +56,23 @@ namespace Nemesis
 		NeAssertBounds(index, Count); 
 		return Item[index]; 
 	}
-}
 
-//======================================================================================
-namespace Nemesis
-{
+	//==================================================================================
+
 	template <typename T>
-	T* begin( Table<T>& a )
+	inline T* begin( Table<T>& a )
 	{
 		return a.Item;
 	}
 
 	template <typename T>
-	const T* begin( const Table<T>& a )
+	inline const T* begin( const Table<T>& a )
 	{
 		return a.Item;
 	}
 
 	template <typename T>
-	T* end( Table<T>& a )
+	inline T* end( Table<T>& a )
 	{
 		return a.Item + a.Count;
 	}
@@ -94,12 +82,8 @@ namespace Nemesis
 	{
 		return a.Item + a.Count;
 	}
-}
 
-//======================================================================================
-namespace Nemesis
-{
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template < typename T >
 	inline void Table_Init( Table<T>* table, int count )
@@ -176,21 +160,15 @@ namespace Nemesis
 	//----------------------------------------------------------------------------------
 
 	template <typename T>
-	inline Span<T> Table_SpanMid( Table<T>& a, int first, int count )
+	inline Span<T> Table_Span( Table<T>& a )
 	{
-		NeAssertBounds(first, a.Count);
-		NeAssertOut(count >= 0, "Invalid count: %d", count);
-		NeAssert((first + count) <= a.Count);
-		return Span<T> { a.Item + first, count };
+		return Table_SpanMid( a, 0, a.Count );
 	}
 
 	template <typename T>
-	inline Span<const T> Table_SpanMid( const Table<T>& a, int first, int count )
+	inline Span<const T> Table_Span( const Table<T>& a )
 	{
-		NeAssertBounds(first, a.Count);
-		NeAssertOut(count >= 0, "Invalid count: %d", count);
-		NeAssert((first + count) <= a.Count);
-		return Span<const T> { a.Item + first, count };
+		return Table_SpanMid( a, 0, a.Count );
 	}
 
 	template <typename T>
@@ -218,17 +196,22 @@ namespace Nemesis
 	}
 
 	template <typename T>
-	inline Span<T> Table_Span( Table<T>& a )
+	inline Span<T> Table_SpanMid( Table<T>& a, int first, int count )
 	{
-		return Table_SpanMid( a, 0, a.Count );
+		NeAssertBounds(first, a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((first + count) <= a.Count);
+		return Span<T> { a.Item + first, count };
 	}
 
 	template <typename T>
-	inline Span<const T> Table_Span( const Table<T>& a )
+	inline Span<const T> Table_SpanMid( const Table<T>& a, int first, int count )
 	{
-		return Table_SpanMid( a, 0, a.Count );
+		NeAssertBounds(first, a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((first + count) <= a.Count);
+		return Span<const T> { a.Item + first, count };
 	}
-
 }
 
 //======================================================================================
@@ -242,6 +225,8 @@ namespace Nemesis
 		Table<char>	   Strings;
 	};
 
+	//==================================================================================
+
 	uint8_t* NE_API NameTable_Bind		 ( NameTable_s* table, uint8_t* data );
 	void	 NE_API NameTable_ReBase	 ( NameTable_s* table, ReBase::Op op );
 	void	 NE_API NameTable_Init		 ( NameTable_s* table, const cstr_t* item, int count );
@@ -249,11 +234,9 @@ namespace Nemesis
 	uint8_t* NE_API NameTable_Setup		 ( NameTable_s* table, uint8_t* pos, const cstr_t* item, int count, TableSetup::Mode mode );
 	int		 NE_API NameTable_GetNumNames( const NameTable_s* table );
 	cstr_t	 NE_API NameTable_GetName	 ( const NameTable_s* table, int index );
-}
 
-//======================================================================================
-namespace Nemesis
-{
+	//==================================================================================
+
 	inline uint8_t* NameTable_Setup( NameTable_s* table, uint8_t* pos, const Span<const cstr_t>& items, TableSetup::Mode mode )
 	{
 		return NameTable_Setup( table, pos, items.Item, items.Count, mode );

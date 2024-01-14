@@ -18,23 +18,21 @@ namespace Nemesis
 		~Array();
 
 	public:
-		T* Item;
-		int Count;
-		int Capacity;
-		Alloc_t Alloc;
-
-	public:
 		T&		 operator [] ( int index );
 		const T& operator [] ( int index ) const;
 
 		Array<T>& operator = ( const Array<T>& rhs );
 		Array<T>& operator = ( Array<T>&& rhs );
-	};
-}
 
-//======================================================================================
-namespace Nemesis
-{
+	public:
+		T* Item;
+		int Count;
+		int Capacity;
+		Alloc_t Alloc;
+	};
+
+	//==================================================================================
+
 	template <typename T>
 	Array<T>::Array( Alloc_t alloc )
 		: Item( nullptr )
@@ -109,40 +107,8 @@ namespace Nemesis
 		Array_Init( rhs, nullptr );
 		return *this;
 	}
-}
 
-//======================================================================================
-namespace Nemesis
-{
-	template <typename T>
-	T* begin( Array<T>& a )
-	{
-		return a.Item;
-	}
-
-	template <typename T>
-	const T* begin( const Array<T>& a )
-	{
-		return a.Item;
-	}
-
-	template <typename T>
-	T* end( Array<T>& a )
-	{
-		return a.Item + a.Count;
-	}
-
-	template <typename T>
-	const T* end( const Array<T>& a )
-	{
-		return a.Item + a.Count;
-	}
-}
-
-//======================================================================================
-namespace Nemesis
-{
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
 	inline void Array_Init( Array<T>& a, Alloc_t alloc )
@@ -197,7 +163,7 @@ namespace Nemesis
 		a.Count = new_count;
 	}
 
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
 	inline void Array_Zero( Array<T>& a )
@@ -228,7 +194,7 @@ namespace Nemesis
 		return Arr_Cpy( a.Item + index, value, count );
 	}
 
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
 	inline T* Array_Append( Array<T>& a, const T* item, int count )
@@ -310,7 +276,7 @@ namespace Nemesis
 		a.Count--;
 	}
 
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
 	inline bool Array_IsValidIndex( const Array<T>& a, int index )
@@ -336,24 +302,18 @@ namespace Nemesis
 		return a.Capacity * sizeof(T);
 	}
 
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
-	inline Span<T> Array_SpanMid( Array<T>& a, int first, int count )
+	inline Span<T> Array_Span( Array<T>& a )
 	{
-		NeAssertBounds(first, a.Count);
-		NeAssertOut(count >= 0, "Invalid count: %d", count);
-		NeAssert((first + count) <= a.Count);
-		return Span<T> { a.Item + first, count };
+		return Array_SpanMid( a, 0, a.Count );
 	}
 
 	template <typename T>
-	inline Span<const T> Array_SpanMid( const Array<T>& a, int first, int count )
+	inline Span<const T> Array_Span( const Array<T>& a )
 	{
-		NeAssertBounds(first, a.Count);
-		NeAssertOut(count >= 0, "Invalid count: %d", count);
-		NeAssert((first + count) <= a.Count);
-		return Span<const T> { a.Item + first, count };
+		return Array_SpanMid( a, 0, a.Count );
 	}
 
 	template <typename T>
@@ -381,15 +341,46 @@ namespace Nemesis
 	}
 
 	template <typename T>
-	inline Span<T> Array_Span( Array<T>& a )
+	inline Span<T> Array_SpanMid( Array<T>& a, int first, int count )
 	{
-		return Array_SpanMid( a, 0, a.Count );
+		NeAssertBounds(first, a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((first + count) <= a.Count);
+		return Span<T> { a.Item + first, count };
 	}
 
 	template <typename T>
-	inline Span<const T> Array_Span( const Array<T>& a )
+	inline Span<const T> Array_SpanMid( const Array<T>& a, int first, int count )
 	{
-		return Array_SpanMid( a, 0, a.Count );
+		NeAssertBounds(first, a.Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((first + count) <= a.Count);
+		return Span<const T> { a.Item + first, count };
 	}
 
+	//==================================================================================
+
+	template <typename T>
+	inline T* begin( Array<T>& a )
+	{
+		return a.Item;
+	}
+
+	template <typename T>
+	inline const T* begin( const Array<T>& a )
+	{
+		return a.Item;
+	}
+
+	template <typename T>
+	inline T* end( Array<T>& a )
+	{
+		return a.Item + a.Count;
+	}
+
+	template <typename T>
+	inline const T* end( const Array<T>& a )
+	{
+		return a.Item + a.Count;
+	}
 }
