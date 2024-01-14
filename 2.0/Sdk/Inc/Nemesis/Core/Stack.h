@@ -85,7 +85,7 @@ namespace Nemesis
 	{
 		for ( int i = 0; i < Pages.Count; ++i )
 			Mem_Free( Pages.Alloc, Pages[i] );
-		Array_Clear(Pages);
+		Pages.Clear();
 	}
 
 	inline void Stack_s::Reset()
@@ -152,7 +152,7 @@ namespace Nemesis
 		page->End	= (page_buffer + size);
 
 		NeAssertOut(Pages.Count != 64, "Stack exceeding 64 pages! Please consider increasing the page size!");
-		Array_Append(Pages, page);
+		Pages.Append(page);
 		return page;
 	}
 

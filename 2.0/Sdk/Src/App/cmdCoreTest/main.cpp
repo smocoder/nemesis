@@ -104,7 +104,7 @@ static void Array_AddIndex( Array<int>& arr, int count )
 {
 	const int first = arr.Count; 
 	for ( int i = 0; i < count; ++i )
-		Array_Append( arr, first+i );
+		arr.Append( first+i );
 }
 
 static void Array_SetRanged( Array<int>& arr, int val )
@@ -116,7 +116,7 @@ static void Array_SetRanged( Array<int>& arr, int val )
 static Array<int> Array_Build()
 {
 	Array<int> arr = {};
-	Array_Resize( arr, 10 );
+	arr.Resize( 10 );
 	Array_SetIndex( arr, 0, 10 );
 	return arr;
 }
@@ -126,28 +126,28 @@ static void TestArray()
 	const int values [] = { 42, 17, 12, 7, 3 };
 
 	Array<int> arr;
-	Array_Reserve( arr, 20 );								Array_Print( "Reserve", arr );
-	Array_Resize( arr, 10 );								Array_Print( "Resize", arr );
-	Array_Zero( arr );										Array_Print( "Zero", arr );
-	Array_Fill( arr, -1 );									Array_Print( "Fill (-1)", arr );
-	Array_SetRanged( arr, -42 );							Array_Print( "SetRanged", arr );
-	Array_SetIndex( arr, 0, 10 );							Array_Print( "SetIndex", arr );
-	Array_AddIndex( arr, 10 );								Array_Print( "AddIndex", arr );
-	Array_RemoveSwapAt( arr, 0 );							Array_Print( "RemoveSwapAt", arr );
-	Array_RemoveAt( arr, 0 );								Array_Print( "RemoveAt", arr );
-	Array_Reset( arr );										Array_Print( "Reset", arr );
-	Array_Append( arr, values, NeCountOf(values) );			Array_Print( "Append (Multi)", arr );
-	Array_InsertAt( arr, 1, values, NeCountOf(values) );	Array_Print( "InsertAt (Multi)", arr );
-	Array_RemoveAt( arr, 1, NeCountOf(values) );			Array_Print( "RemoveAt (Multi)", arr );
-	Array_RemoveAt( arr, 0, arr.Count );					Array_Print( "RemoveAt (All)", arr );
-	Array_Clear( arr );
+	arr.Reserve( 20 );								Array_Print( "Reserve", arr );
+	arr.Resize( 10 );								Array_Print( "Resize", arr );
+	arr.Zero();										Array_Print( "Zero", arr );
+	arr.Fill( -1 );									Array_Print( "Fill (-1)", arr );
+	Array_SetRanged( arr, -42 );					Array_Print( "SetRanged", arr );
+	Array_SetIndex( arr, 0, 10 );					Array_Print( "SetIndex", arr );
+	Array_AddIndex( arr, 10 );						Array_Print( "AddIndex", arr );
+	arr.RemoveSwapAt( 0 );							Array_Print( "RemoveSwapAt", arr );
+	arr.RemoveAt( 0 );								Array_Print( "RemoveAt", arr );
+	arr.Reset();									Array_Print( "Reset", arr );
+	arr.Append( values, NeCountOf(values) );		Array_Print( "Append (Multi)", arr );
+	arr.InsertAt( 1, values, NeCountOf(values) );	Array_Print( "InsertAt (Multi)", arr );
+	arr.RemoveAt( 1, NeCountOf(values) );			Array_Print( "RemoveAt (Multi)", arr );
+	arr.RemoveAt( 0, arr.Count );					Array_Print( "RemoveAt (All)", arr );
+	arr.Clear();
 
 	Array<int> arr1;
-	Array_Resize( arr1, 10 );
+	arr1.Resize( 10 );
 	Array_SetIndex( arr1, 0, 10 );
 
 	Array<int> arr2 = arr1;
-	Array_RemoveAt( arr1, 0, arr1.Count );
+	arr2.RemoveAt( 0, arr1.Count );
 
 	Array<int> arr3 = Array_Build();
 	Array_Print( "Move Ctor", arr3 );
@@ -167,45 +167,45 @@ static void Span_Print( cstr_t title, const Span<const int>& span )
 static void TestSpan()
 {
 	Array<int> arr = {};
-	Array_Resize( arr, 30 );
+	arr.Resize( 30 );
 	{
 		// non-const
-		Span<int> span_l = Array_SpanLeft ( arr, 10 );
-		Span<int> span_r = Array_SpanRight( arr, 10 );
-		Span<int> span_m = Array_SpanMid  ( arr, 10, arr.Count - span_l.Count - span_r.Count );
+		Span<int> span_l = arr.Left ( 10 );
+		Span<int> span_r = arr.Right( 10 );
+		Span<int> span_m = arr.Mid  ( 10, arr.Count - span_l.Count - span_r.Count );
 		Span_Fill( span_l, 42 );
 		Span_Fill( span_r, 17 );
 		Span_Zero( span_m );
-		Array_Print( "Fill (Span)", arr );
+		Array_Print( "Fill", arr );
 	}
 	{
 		// const conversion operator
-		const Span<const int> span_l = Array_SpanLeft ( arr, 10 );
-		const Span<const int> span_r = Array_SpanRight( arr, 10 );
-		const Span<const int> span_m = Array_SpanMid  ( arr, 10, arr.Count - span_l.Count - span_r.Count );
-		Span_Print( "SpanLeft" , span_l );
-		Span_Print( "SpanRight", span_r );
-		Span_Print( "SpanMid"  , span_m );
+		const Span<const int> span_l = arr.Left ( 10 );
+		const Span<const int> span_r = arr.Right( 10 );
+		const Span<const int> span_m = arr.Mid  ( 10, arr.Count - span_l.Count - span_r.Count );
+		Span_Print( "Left" , span_l );
+		Span_Print( "Right", span_r );
+		Span_Print( "Mid"  , span_m );
 	}
 	{
 		// const overload
 		const Array<int>& const_arr = arr;
-		const Span<const int> span_l = Array_SpanLeft ( const_arr, 10 );
-		const Span<const int> span_r = Array_SpanRight( const_arr, 10 );
-		const Span<const int> span_m = Array_SpanMid  ( const_arr, 10, arr.Count - span_l.Count - span_r.Count );
-		Span_Print( "SpanLeft" , span_l );
-		Span_Print( "SpanRight", span_r );
-		Span_Print( "SpanMid"  , span_m );
+		const Span<const int> span_l = const_arr.Left ( 10 );
+		const Span<const int> span_r = const_arr.Right( 10 );
+		const Span<const int> span_m = const_arr.Mid  ( 10, arr.Count - span_l.Count - span_r.Count );
+		Span_Print( "Left" , span_l );
+		Span_Print( "Right", span_r );
+		Span_Print( "Mid"  , span_m );
 	}
 }
 
 static void TestSearch()
 {
 	Array<int> arr = {};
-	Array_Resize( arr, 10 );
+	arr.Resize( 10 );
 	Array_SetIndex( arr, 0, 10 );
 
-	const Span<const int> span = Array_Span( arr );
+	const Span<const int> span = arr;
 
 	// --- Operators
 
