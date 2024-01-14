@@ -122,3 +122,128 @@ namespace Nemesis
 	}
 }
 
+//======================================================================================
+namespace Nemesis
+{
+	int Utf8_Len( cstr_t text )
+	{
+		int n;
+		int len = 0;
+		uint32_t cp;
+		cstr_t pos = text;
+		for ( ; pos; )
+		{
+			n = Utf8_Decode( pos, nullptr, cp );
+			if (!n)
+				break;
+			len += n;
+			pos += n;
+		}
+		return len;
+	}
+
+	int Utf8_Len( cstr_t start, cstr_t end )
+	{
+		int n;
+		int len = 0;
+		uint32_t cp;
+		cstr_t pos = start;
+		for ( ; pos && (pos < end); )
+		{
+			n = Utf8_Decode( pos, end, cp );
+			if (!n)
+				break;
+			len += n;
+			pos += n;
+		}
+		return len;
+	}
+
+	int Utf8_Decode( cstr_t start, cstr_t end, uint32_t& codepoint )
+	{
+		if (!start || !start[0] || (start == end))
+		{
+			codepoint = 0;
+			return 0;
+		}
+
+		//
+		//	bytes	cp bits		first cp	last cp		byte 1		byte 2		 byte 3		byte 4
+		//	1		 7			U+0000		U+007F		0xxxxxxx			
+		//	2		11			U+0080		U+07FF		110xxxxx	10xxxxxx		
+		//	3		16			U+0800		U+FFFF		1110xxxx	10xxxxxx	10xxxxxx	
+		//	4		21			U+10000		U+10FFFF	11110xxx	10xxxxxx	10xxxxxx	10xxxxxx
+		//
+		uint32_t cp = (uint32_t)-1;
+		const uint8_t* pos = (const uint8_t*)start;
+		if (!(*pos & 0x80))
+		{
+			cp = (uint32_t)(*pos++);
+			codepoint = cp;
+			return 1;
+		}
+		if ((*pos & 0xe0) == 0xc0)
+		{
+			codepoint = 0xfffd; // will be invalid but not end of posing
+			if (end && end - (cstr_t)pos < 2) 
+				return 1;
+			if (*pos < 0xc2) 
+				return 2;
+			cp = (uint32_t)((*pos++ & 0x1f) << 6);
+			if ((*pos & 0xc0) != 0x80) 
+				return 2;
+			cp += (*pos++ & 0x3f);
+			codepoint = cp;
+			return 2;
+		}
+		if ((*pos & 0xf0) == 0xe0)
+		{
+			codepoint = 0xfffd; // will be invalid but not end of posing
+			if (end && end - (cstr_t)pos < 3) 
+				return 1;
+			if (*pos == 0xe0 && (pos[1] < 0xa0 || pos[1] > 0xbf)) 
+				return 3;
+			if (*pos == 0xed && pos[1] > 0x9f) 
+				return 3; // pos[1] < 0x80 is checked below
+			cp = (uint32_t)((*pos++ & 0x0f) << 12);
+			if ((*pos & 0xc0) != 0x80) 
+				return 3;
+			cp += (uint32_t)((*pos++ & 0x3f) << 6);
+			if ((*pos & 0xc0) != 0x80) 
+				return 3;
+			cp += (*pos++ & 0x3f);
+			codepoint = cp;
+			return 3;
+		}
+		if ((*pos & 0xf8) == 0xf0)
+		{
+			codepoint = 0xfffd; // will be invalid but not end of posing
+			if (end && end - (cstr_t)pos < 4) 
+				return 1;
+			if (*pos > 0xf4) 
+				return 4;
+			if (*pos == 0xf0 && (pos[1] < 0x90 || pos[1] > 0xbf)) 
+				return 4;
+			if (*pos == 0xf4 && pos[1] > 0x8f) 
+				return 4; // pos[1] < 0x80 is checked below
+			cp = (uint32_t)((*pos++ & 0x07) << 18);
+			if ((*pos & 0xc0) != 0x80) 
+				return 4;
+			cp += (uint32_t)((*pos++ & 0x3f) << 12);
+			if ((*pos & 0xc0) != 0x80) 
+				return 4;
+			cp += (uint32_t)((*pos++ & 0x3f) << 6);
+			if ((*pos & 0xc0) != 0x80) 
+				return 4;
+			cp += (*pos++ & 0x3f);
+			// utf-8 encodings of values used in surrogate pairs are invalid
+			if ((cp & 0xFFFFF800) == 0xD800) 
+				return 4;
+			codepoint = cp;
+			return 4;
+		}
+		codepoint = 0;
+		return 0;	
+	}
+
+}

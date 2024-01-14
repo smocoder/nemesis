@@ -37,3 +37,11 @@ namespace Nemesis
 		return n;
 	}
 }
+
+//======================================================================================
+namespace Nemesis
+{
+	int NE_API Utf8_Len		( cstr_t text );
+	int NE_API Utf8_Len		( cstr_t start, cstr_t end );
+	int NE_API Utf8_Decode	( cstr_t start, cstr_t end, uint32_t& codepoint );
+}
