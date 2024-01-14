@@ -9,19 +9,31 @@ namespace Nemesis
 	template <typename T>
 	struct Span
 	{
+	public:
 		T* Item;
 		int Count;
 
+	public:
+		void Zero();
+		void Fill( const T& item );
+
+	public:
+		Span<T>			Left ( int count );
+		Span<const T>	Left ( int count ) const;
+		Span<T>			Right( int count );
+		Span<const T>	Right( int count ) const;
+		Span<T>			Mid	 ( int index, int count );
+		Span<const T>	Mid	 ( int index, int count ) const;
+
+	public:
 		T&		 operator [] ( int index );
 		const T& operator [] ( int index ) const;
 
 		operator Span<const T> () const;
 	};
-}
 
-//======================================================================================
-namespace Nemesis
-{
+	//==================================================================================
+
 	template <typename T>
 	inline T& Span<T>::operator [] ( int index )	
 	{ 
@@ -42,40 +54,21 @@ namespace Nemesis
 		return Span<const T> { Item, Count }; 
 	}
 
-}
+	//==================================================================================
 
-//======================================================================================
-namespace Nemesis
-{
 	template <typename T>
-	T* begin( Span<T>& span )
+	inline void Span<T>::Zero()
 	{
-		return span.Item;
+		Arr_Zero<T>( Item, Count );
 	}
 
 	template <typename T>
-	const T* begin( const Span<T>& span )
+	inline void Span<T>::Fill( const T& value )
 	{
-		return span.Item;
+		Arr_Set<T>( Item, value, Count );
 	}
 
-	template <typename T>
-	T* end( Span<T>& span )
-	{
-		return span.Item + span.Count;
-	}
-
-	template <typename T>
-	const T* end( const Span<T>& span )
-	{
-		return span.Item + span.Count;
-	}
-}
-
-//======================================================================================
-namespace Nemesis
-{
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
 	inline void Span_Init( Span<T>& span, T* item, int count )
@@ -97,21 +90,7 @@ namespace Nemesis
 		return Span<T> { items, S };
 	}
 
-	//----------------------------------------------------------------------------------
-
-	template <typename T>
-	inline void Span_Zero( Span<T>& span )
-	{
-		Arr_Zero<T>( span.Item, span.Count );
-	}
-
-	template <typename T>
-	inline void Span_Fill( Span<T>& span, const T& value )
-	{
-		Arr_Set<T>( span.Item, value, span.Count );
-	}
-
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
 	inline bool Span_IsValidIndex( const Span<T>& span, int index )
@@ -135,6 +114,32 @@ namespace Nemesis
 	inline size_t Span_GetReservedSize( const Span<T>& span )
 	{
 		return span.Capacity * sizeof(T);
+	}
+
+	//==================================================================================
+
+	template <typename T>
+	inline T* begin( Span<T>& span )
+	{
+		return span.Item;
+	}
+
+	template <typename T>
+	inline const T* begin( const Span<T>& span )
+	{
+		return span.Item;
+	}
+
+	template <typename T>
+	inline T* end( Span<T>& span )
+	{
+		return span.Item + span.Count;
+	}
+
+	template <typename T>
+	inline const T* end( const Span<T>& span )
+	{
+		return span.Item + span.Count;
 	}
 
 }

@@ -173,9 +173,9 @@ static void TestSpan()
 		Span<int> span_l = arr.Left ( 10 );
 		Span<int> span_r = arr.Right( 10 );
 		Span<int> span_m = arr.Mid  ( 10, arr.Count - span_l.Count - span_r.Count );
-		Span_Fill( span_l, 42 );
-		Span_Fill( span_r, 17 );
-		Span_Zero( span_m );
+		span_l.Fill( 42 );
+		span_r.Fill( 17 );
+		span_m.Zero();
 		Array_Print( "Fill", arr );
 	}
 	{
