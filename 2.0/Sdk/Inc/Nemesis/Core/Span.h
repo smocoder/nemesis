@@ -71,6 +71,50 @@ namespace Nemesis
 	//==================================================================================
 
 	template <typename T>
+	inline Span<T> Span<T>::Left( int count )
+	{
+		return Mid( 0, count );
+	}
+
+	template <typename T>
+	inline Span<const T> Span<T>::Left( int count ) const
+	{
+		return Mid( 0, count );
+	}
+
+	template <typename T>
+	inline Span<T> Span<T>::Right( int count )
+	{
+		return Mid( Count - count, count );
+	}
+
+	template <typename T>
+	inline Span<const T> Span<T>::Right( int count ) const
+	{
+		return Mid( Count - count, count );
+	}
+
+	template <typename T>
+	inline Span<T> Span<T>::Mid( int index, int count )
+	{
+		NeAssertBounds(index, Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((index + count) <= Count);
+		return Span<T> { Item + index, count };
+	}
+
+	template <typename T>
+	inline Span<const T> Span<T>::Mid( int index, int count ) const
+	{
+		NeAssertBounds(index, Count);
+		NeAssertOut(count >= 0, "Invalid count: %d", count);
+		NeAssert((index + count) <= Count);
+		return Span<const T> { Item + index, count };
+	}
+
+	//==================================================================================
+
+	template <typename T>
 	inline void Span_Init( Span<T>& span, T* item, int count )
 	{
 		NeAssert(item || !count);
