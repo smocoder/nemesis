@@ -39,6 +39,10 @@ namespace Nemesis
 	public:
 		T&		 operator [] ( int index );
 		const T& operator [] ( int index ) const;
+
+	public:
+		operator Span<T>		();
+		operator Span<const T>	() const;
 	};
 
 	//==================================================================================
@@ -57,30 +61,16 @@ namespace Nemesis
 		return Item[index]; 
 	}
 
-	//==================================================================================
-
 	template <typename T>
-	inline T* begin( Table<T>& a )
+	inline Table<T>::operator Span<T>()
 	{
-		return a.Item;
+		return Span<T> { Item, Count };
 	}
 
 	template <typename T>
-	inline const T* begin( const Table<T>& a )
+	inline Table<T>::operator Span<const T>() const
 	{
-		return a.Item;
-	}
-
-	template <typename T>
-	inline T* end( Table<T>& a )
-	{
-		return a.Item + a.Count;
-	}
-
-	template <typename T>
-	const T* end( const Table<T>& a )
-	{
-		return a.Item + a.Count;
+		return Span<const T> { Item, Count };
 	}
 
 	//==================================================================================
@@ -132,7 +122,7 @@ namespace Nemesis
 		}
 	}
 
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template < typename T >
 	inline uint8_t* Table_Setup( Table<T>* table, uint8_t* pos, const T* item, int count, TableSetup::Mode mode )
@@ -157,61 +147,32 @@ namespace Nemesis
 		return Table_Setup( table, pos, items.Item, items.Count, mode );
 	}
 
-	//----------------------------------------------------------------------------------
+	//==================================================================================
 
 	template <typename T>
-	inline Span<T> Table_Span( Table<T>& a )
+	inline T* begin( Table<T>& a )
 	{
-		return Table_SpanMid( a, 0, a.Count );
+		return a.Item;
 	}
 
 	template <typename T>
-	inline Span<const T> Table_Span( const Table<T>& a )
+	inline const T* begin( const Table<T>& a )
 	{
-		return Table_SpanMid( a, 0, a.Count );
+		return a.Item;
 	}
 
 	template <typename T>
-	inline Span<T> Table_SpanLeft( Table<T>& a, int count )
+	inline T* end( Table<T>& a )
 	{
-		return Table_SpanMid( a, 0, count );
+		return a.Item + a.Count;
 	}
 
 	template <typename T>
-	inline Span<const T> Table_SpanLeft( const Table<T>& a, int count )
+	const T* end( const Table<T>& a )
 	{
-		return Table_SpanMid( a, 0, count );
+		return a.Item + a.Count;
 	}
 
-	template <typename T>
-	inline Span<T> Table_SpanRight( Table<T>& a, int count )
-	{
-		return Table_SpanMid( a, a.Count - count, count );
-	}
-
-	template <typename T>
-	inline Span<const T> Table_SpanRight( const Table<T>& a, int count )
-	{
-		return Table_SpanMid( a, a.Count - count, count );
-	}
-
-	template <typename T>
-	inline Span<T> Table_SpanMid( Table<T>& a, int first, int count )
-	{
-		NeAssertBounds(first, a.Count);
-		NeAssertOut(count >= 0, "Invalid count: %d", count);
-		NeAssert((first + count) <= a.Count);
-		return Span<T> { a.Item + first, count };
-	}
-
-	template <typename T>
-	inline Span<const T> Table_SpanMid( const Table<T>& a, int first, int count )
-	{
-		NeAssertBounds(first, a.Count);
-		NeAssertOut(count >= 0, "Invalid count: %d", count);
-		NeAssert((first + count) <= a.Count);
-		return Span<const T> { a.Item + first, count };
-	}
 }
 
 //======================================================================================
